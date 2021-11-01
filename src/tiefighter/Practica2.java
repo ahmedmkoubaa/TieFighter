@@ -14,8 +14,15 @@ public class Practica2 extends LARVAFirstAgent{
         CLOSEPROBLEM, EXIT
     }
     
+    
     Status mystatus;
-    String service = "PManager", problem = "Abafar",
+    
+    // MUNDOS 
+    // P1: Dagobah 
+    // P2-basicos: Abafar Batuu Chandrila Dathomir Endor 
+    // P2-avanzados: Felucia Hoth Mandalore Tatooine
+    
+    String service = "PManager", problem = "Felucia",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
@@ -271,13 +278,19 @@ public class Practica2 extends LARVAFirstAgent{
 
                         // CODIGO NUEVO AÑADIDO POR AHMED EL 01/11
                         double diffAngulo = Math.abs(compass-angular);
-                        if( diffAngulo >= 45) {
+                        double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
+                        
+                        Info("Compass " + compass + 
+                              " angular " + angular + 
+                                " distancia " + distanciaAngulo);
+                        
+                        if( distanciaAngulo >= 45) {
                             // Elegir distancia de giro minimo
-                            if ( diffAngulo < gradoTotal/2 ) {
-                                 nextAction = "LEFT";       // A la derecha si es mayor que 180
+                            if ( distanciaAngulo < gradoTotal/2 ) {
+                                 nextAction = "LEFT";       // A la izquierda si es mayor que 180
                             }
                             else {
-                                 nextAction = "RIGHT";      // En otro caso a la izquierda
+                                 nextAction = "RIGHT";      // En otro caso a la derecha
                             }
                         } else {
                             nextAction = "MOVE";
@@ -287,7 +300,18 @@ public class Practica2 extends LARVAFirstAgent{
                             if (alturaEnfrente < 0) {
                                 // Tener en cuenta el MaxFlight y esquivar cuando
                                 // no se pueda subir más
-                                nextAction = "UP";
+                                
+                                double miAltura = myDashboard.getGPS()[2];
+//                                Alert("mi altura es: " + miAltura);
+                                
+                                if (miAltura == maxFlight) {
+                                    nextAction = "LEFT";
+                                } else {
+                                    nextAction = "UP";    
+                                }
+                                
+                                
+                                
                             }
                         }
                     } else {
