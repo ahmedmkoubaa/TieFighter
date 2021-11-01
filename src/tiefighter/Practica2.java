@@ -15,7 +15,7 @@ public class Practica2 extends LARVAFirstAgent{
     }
     
     Status mystatus;
-    String service = "PManager", problem = "Endor",
+    String service = "PManager", problem = "Abafar",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
@@ -29,6 +29,7 @@ public class Practica2 extends LARVAFirstAgent{
         "MOVE", "CAPTURE"
     };
     private int sigAction = 0;
+    private final int gradoTotal = 360;
    
     double maxEnergy = -1;
     final double porcentajeLimite = 0.4;
@@ -264,28 +265,23 @@ public class Practica2 extends LARVAFirstAgent{
                 } else {
                     // Si no estamos sobre el objetivo
                     if (this.myDashboard.getDistance() > 0) {
-                        final int gradoTotal = 360;
+                        
                         final int compass = this.myDashboard.getCompass();
                         final double angular = this.myDashboard.getAngular();
 
-                        if(Math.abs(compass-angular) >= 45) {
-                            nextAction = "LEFT";
+                        // CODIGO NUEVO AÑADIDO POR AHMED EL 01/11
+                        double diffAngulo = Math.abs(compass-angular);
+                        if( diffAngulo >= 45) {
+                            // Elegir distancia de giro minimo
+                            if ( diffAngulo < gradoTotal/2 ) {
+                                 nextAction = "LEFT";       // A la derecha si es mayor que 180
+                            }
+                            else {
+                                 nextAction = "RIGHT";      // En otro caso a la izquierda
+                            }
                         } else {
                             nextAction = "MOVE";
-                            int alturaEnfrente = 0;
-
-                            // Hallar casilla de enfrente
-                            switch(compass){
-                                case 0:     alturaEnfrente = lidar[5][6]; break;
-                                case 45:    alturaEnfrente = lidar[4][6]; break;
-                                case 90:    alturaEnfrente = lidar[4][5]; break;
-                                case 135:   alturaEnfrente = lidar[4][4]; break;
-                                case 180:   alturaEnfrente = lidar[5][4]; break;
-                                case 225:   alturaEnfrente = lidar[6][4]; break;
-                                case 270:   alturaEnfrente = lidar[6][5]; break;
-                                case 315:   alturaEnfrente = lidar[6][6]; break;
-                                default: Alert("Compass no reconocido " + compass); break;
-                            }
+                            int alturaEnfrente = mapearAlturaSegunCompass(compass, lidar);
 
                             // Si enfrente es mas alto que dron hay que subir
                             if (alturaEnfrente < 0) {
@@ -313,7 +309,29 @@ public class Practica2 extends LARVAFirstAgent{
         return nextAction;
     }
     
-    // Funcion mas importante, resuelve el problema que se abra, en este caso
+    // Metodo privado que devuelve la altura de la casilla que se encuentre
+    // en la direccion que apunte el compass (sobre el lidar pasado)
+    private int mapearAlturaSegunCompass (final int compass, final int lidar [][]) {
+        // Hallar altura casilla de enfrente
+        int alturaEnfrente = -1;
+        switch(compass){
+            case 0:     alturaEnfrente = lidar[5][6]; break;
+            case 45:    alturaEnfrente = lidar[4][6]; break;
+            case 90:    alturaEnfrente = lidar[4][5]; break;
+            case 135:   alturaEnfrente = lidar[4][4]; break;
+            case 180:   alturaEnfrente = lidar[5][4]; break;
+            case 225:   alturaEnfrente = lidar[6][4]; break;
+            case 270:   alturaEnfrente = lidar[6][5]; break;
+            case 315:   alturaEnfrente = lidar[6][6]; break;
+            
+            default: Alert("Compass no reconocido " + compass); break;
+        }
+        
+        return alturaEnfrente;
+    }
+    
+    
+    // Metodo importante, resuelve el problema que se abra, en este caso
     // el de Dagobah
     public Status MySolveProblem() {
         
