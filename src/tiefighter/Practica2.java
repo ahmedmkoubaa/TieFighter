@@ -15,7 +15,7 @@ public class Practica2 extends LARVAFirstAgent{
     }
     
     Status mystatus;
-    String service = "PManager", problem = "Felucia",
+    String service = "PManager", problem = "Abafar",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
@@ -31,7 +31,7 @@ public class Practica2 extends LARVAFirstAgent{
     private int sigAction = 0;
    
     double maxEnergy = -1;
-    final double porcentajeLimite = 0.5;
+    final double porcentajeLimite = 0.3;
     final double porcentajeCercania = 0.6;
     
     // Atributos en los que se almacenaran los valores
@@ -242,68 +242,70 @@ public class Practica2 extends LARVAFirstAgent{
             maxEnergy = myDashboard.getEnergy() + myDashboard.getEnergyBurnt();   
             umbralLimiteRecarga = porcentajeLimite * maxEnergy;
             umbralCercaniaRecarga = porcentajeCercania * maxEnergy;
+            nextAction = "RECHARGE";
         }
-        
-        // Si el dron sigue vivo y tiene energia
-        if (myDashboard.getAlive() && myDashboard.getEnergy() > 0) {
-            int lidar[][] = this.myDashboard.getLidar();
-            
-            
-            if (myDashboard.getEnergy() > umbralLimiteRecarga) {
-                
-                // Si no estamos sobre el objetivo
-                if (this.myDashboard.getDistance() > 0) {
-                    final int gradoTotal = 360;
-                    final int compass = this.myDashboard.getCompass();
-                    final double angular = this.myDashboard.getAngular();
+        else {
+            // Si el dron sigue vivo y tiene energia
+            if (myDashboard.getAlive() && myDashboard.getEnergy() > 0) {
+                int lidar[][] = this.myDashboard.getLidar();
 
-                    if(Math.abs(compass-angular) >= 45) {
-                        nextAction = "LEFT";
-                    } else {
-                        nextAction = "MOVE";
-                        int alturaEnfrente = 0;
 
-                        // Hallar casilla de enfrente
-                        switch(compass){
-                            case 0:     alturaEnfrente = lidar[5][6]; break;
-                            case 45:    alturaEnfrente = lidar[4][6]; break;
-                            case 90:    alturaEnfrente = lidar[4][5]; break;
-                            case 135:   alturaEnfrente = lidar[4][4]; break;
-                            case 180:   alturaEnfrente = lidar[5][4]; break;
-                            case 225:   alturaEnfrente = lidar[6][4]; break;
-                            case 270:   alturaEnfrente = lidar[6][5]; break;
-                            case 315:   alturaEnfrente = lidar[6][6]; break;
-                            default: Alert("Compass no reconocido " + compass); break;
+                if (myDashboard.getEnergy() > umbralLimiteRecarga) {
+
+                    // Si no estamos sobre el objetivo
+                    if (this.myDashboard.getDistance() > 0) {
+                        final int gradoTotal = 360;
+                        final int compass = this.myDashboard.getCompass();
+                        final double angular = this.myDashboard.getAngular();
+
+                        if(Math.abs(compass-angular) >= 45) {
+                            nextAction = "LEFT";
+                        } else {
+                            nextAction = "MOVE";
+                            int alturaEnfrente = 0;
+
+                            // Hallar casilla de enfrente
+                            switch(compass){
+                                case 0:     alturaEnfrente = lidar[5][6]; break;
+                                case 45:    alturaEnfrente = lidar[4][6]; break;
+                                case 90:    alturaEnfrente = lidar[4][5]; break;
+                                case 135:   alturaEnfrente = lidar[4][4]; break;
+                                case 180:   alturaEnfrente = lidar[5][4]; break;
+                                case 225:   alturaEnfrente = lidar[6][4]; break;
+                                case 270:   alturaEnfrente = lidar[6][5]; break;
+                                case 315:   alturaEnfrente = lidar[6][6]; break;
+                                default: Alert("Compass no reconocido " + compass); break;
+                            }
+
+                            // Si enfrente es mas alto que dron hay que subir
+                            if (alturaEnfrente < 0) {
+                                // Tener en cuenta el MaxFlight y esquivar cuando
+                                // no se pueda subir más
+                                nextAction = "UP";
+                            }
                         }
-
-                        // Si enfrente es mas alto que dron hay que subir
-                        if (alturaEnfrente < 0) {
-                            // Tener en cuenta el MaxFlight y esquivar cuando
-                            // no se pueda subir más
-                            nextAction = "UP";
+                    } else {
+                        // Si estamos sobre el objetivo pero mas altos que
+                        // este, habra que descender
+                        if (lidar[5][5] > 0) {
+                            nextAction = "DOWN";
+                        } else {
+                            // capturar objetivo
+                            nextAction = "CAPTURE";
                         }
                     }
                 } else {
-                    // Si estamos sobre el objetivo pero mas altos que
-                    // este, habra que descender
+
+                    // Recargar
                     if (lidar[5][5] > 0) {
                         nextAction = "DOWN";
                     } else {
-                        // capturar objetivo
-                        nextAction = "CAPTURE";
+                        nextAction = "RECHARGE";
                     }
                 }
             } else {
-                
-                // Recargar
-                if (lidar[5][5] > 0) {
-                    nextAction = "DOWN";
-                } else {
-                    nextAction = "RECHARGE";
-                }
+                Alert("TieFighter sin vida, fin del juego");
             }
-        } else {
-            Alert("TieFighter sin vida, fin del juego");
         }
         
         return nextAction;
