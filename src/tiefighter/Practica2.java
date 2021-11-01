@@ -15,7 +15,7 @@ public class Practica2 extends LARVAFirstAgent{
     }
     
     Status mystatus;
-    String service = "PManager", problem = "Abafar",
+    String service = "PManager", problem = "Endor",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
@@ -31,8 +31,9 @@ public class Practica2 extends LARVAFirstAgent{
     private int sigAction = 0;
    
     double maxEnergy = -1;
-    final double porcentajeLimite = 0.3;
-    final double porcentajeCercania = 0.6;
+    final double porcentajeLimite = 0.4;
+    final double porcentajeCercania = 0.8;
+    final int alturaCercania = 20;
     
     // Atributos en los que se almacenaran los valores
     // correspondientes a umbrales de recarga
@@ -250,8 +251,17 @@ public class Practica2 extends LARVAFirstAgent{
                 int lidar[][] = this.myDashboard.getLidar();
 
 
-                if (myDashboard.getEnergy() > umbralLimiteRecarga) {
+                if (myDashboard.getEnergy() <= umbralLimiteRecarga ||
+                        (myDashboard.getEnergy() <= umbralCercaniaRecarga && myDashboard.getAltitude() <= alturaCercania)) {
 
+                    // Recargar
+                    if (lidar[5][5] > 0) {
+                        nextAction = "DOWN";
+                    } else {
+                        nextAction = "RECHARGE";
+                    }
+                    
+                } else {
                     // Si no estamos sobre el objetivo
                     if (this.myDashboard.getDistance() > 0) {
                         final int gradoTotal = 360;
@@ -293,14 +303,6 @@ public class Practica2 extends LARVAFirstAgent{
                             // capturar objetivo
                             nextAction = "CAPTURE";
                         }
-                    }
-                } else {
-
-                    // Recargar
-                    if (lidar[5][5] > 0) {
-                        nextAction = "DOWN";
-                    } else {
-                        nextAction = "RECHARGE";
                     }
                 }
             } else {
