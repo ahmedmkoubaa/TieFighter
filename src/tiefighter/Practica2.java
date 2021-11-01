@@ -3,6 +3,7 @@ package tiefighter;
 import agents.LARVAFirstAgent;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
+import java.util.ArrayList;
 import swing.LARVACompactDash;
 import swing.LARVADash;
 
@@ -38,15 +39,23 @@ public class Practica2 extends LARVAFirstAgent{
     private int sigAction = 0;
     private final int gradoTotal = 360;
    
-    double maxEnergy = -1;
-    final double porcentajeLimite = 0.4;
-    final double porcentajeCercania = 0.8;
-    final int alturaCercania = 20;
+    private double maxEnergy = -1;
+    private final double porcentajeLimite = 0.4;
+    private final double porcentajeCercania = 0.8;
+    private final int alturaCercania = 20;
     
     // Atributos en los que se almacenaran los valores
     // correspondientes a umbrales de recarga
-    double umbralLimiteRecarga;
-    double umbralCercaniaRecarga;
+    private double umbralLimiteRecarga;
+    private double umbralCercaniaRecarga;
+    
+    // indica que estamos evitando lo que se encuentre a nuestra izquierda
+    private Boolean evitandoIzquierda = false;
+    
+    // indica que se esta evitando lo que se encuentra a nuestra derecha
+    private Boolean evitandoDerecha = true;
+    
+    private ArrayList<String> acciones = new ArrayList<>();
     
     int width, height, maxFlight;
     
@@ -275,43 +284,65 @@ public class Practica2 extends LARVAFirstAgent{
                         
                         final int compass = this.myDashboard.getCompass();
                         final double angular = this.myDashboard.getAngular();
+                        double miAltura = myDashboard.getGPS()[2];
 
-                        // CODIGO NUEVO AÑADIDO POR AHMED EL 01/11
-                        double diffAngulo = Math.abs(compass-angular);
+                        // ------------------------------------------------------------------- //
+                        /* NUEVO AHMED: 
+                            si se esta evitando ir por la izquierda o la derecha
+                            no se pasa a calcular la distancia de giro minima, 
+                            directamente se descarta dar un giro (independientemente
+                            del sentido que se este esquivando)
+                        */
                         double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
-                        
-                        Info("Compass " + compass + 
-                              " angular " + angular + 
-                                " distancia " + distanciaAngulo);
-                        
-                        if( distanciaAngulo >= 45) {
+                        if( distanciaAngulo >= 45 && !(evitandoIzquierda || evitandoDerecha)) {
+                           
                             // Elegir distancia de giro minimo
                             if ( distanciaAngulo < gradoTotal/2 ) {
-                                 nextAction = "LEFT";       // A la izquierda si es mayor que 180
+                                 nextAction = "LEFT";       
                             }
                             else {
-                                 nextAction = "RIGHT";      // En otro caso a la derecha
+                                 nextAction = "RIGHT"; 
                             }
                         } else {
+                            // ------------------------------------------------------------------- //
+                            /* NUEVO AHMED: 
+                                Si se esta esquivando algun lado, se comprueba
+                                la altura en direccion objetivo, si es menor a 
+                                la nuestra entonce se avanza hacia alla
+                            */
+                            
+                            if (evitandoIzquierda || evitandoDerecha) {
+                                double alturaDireccionAngular = mapearAlturaSegunAngulo((int)angular, lidar);
+                                
+                                // si la altura de la casilla en direccion el objetivo es inferior a mi
+                                // entonces anulo esquivar y dejo que el algoritmo vuelva a apuntar hacia alla
+                                if (alturaDireccionAngular < miAltura){
+                                  evitandoIzquierda = evitandoDerecha = false;  
+                                }
+                            }
+                           
                             nextAction = "MOVE";
-                            int alturaEnfrente = mapearAlturaSegunCompass(compass, lidar);
+                            int alturaEnfrente = mapearAlturaSegunAngulo(compass, lidar);
 
                             // Si enfrente es mas alto que dron hay que subir
                             if (alturaEnfrente < 0) {
-                                // Tener en cuenta el MaxFlight y esquivar cuando
-                                // no se pueda subir más
-                                
-                                double miAltura = myDashboard.getGPS()[2];
-//                                Alert("mi altura es: " + miAltura);
-                                
+
+                                // ------------------------------------------------------------------- //
+                                /* NUEVO AHMED: 
+                                    Si estamos a maxima altura de vuelo, 
+                                    entonces no podemos avanzar a la casilla de
+                                    enfrente, tenemos que comenzar a evitar 
+                                    casillas. Si giramos a la derecha, evitamos
+                                    lo que se nos queda a la izquierda y vicecersa. 
+                                    Cualquier sentido de giro es valido.
+                                */
                                 if (miAltura == maxFlight) {
-                                    nextAction = "LEFT";
+                                    nextAction = "RIGHT";
+                                    evitandoIzquierda = true;
+                                    
                                 } else {
                                     nextAction = "UP";    
                                 }
-                                
-                                
-                                
                             }
                         }
                     } else {
@@ -335,23 +366,48 @@ public class Practica2 extends LARVAFirstAgent{
     
     // Metodo privado que devuelve la altura de la casilla que se encuentre
     // en la direccion que apunte el compass (sobre el lidar pasado)
-    private int mapearAlturaSegunCompass (final int compass, final int lidar [][]) {
+    private int mapearAlturaSegunAngulo (final int angulo, final int lidar [][]) {
         // Hallar altura casilla de enfrente
-        int alturaEnfrente = -1;
-        switch(compass){
-            case 0:     alturaEnfrente = lidar[5][6]; break;
-            case 45:    alturaEnfrente = lidar[4][6]; break;
-            case 90:    alturaEnfrente = lidar[4][5]; break;
-            case 135:   alturaEnfrente = lidar[4][4]; break;
-            case 180:   alturaEnfrente = lidar[5][4]; break;
-            case 225:   alturaEnfrente = lidar[6][4]; break;
-            case 270:   alturaEnfrente = lidar[6][5]; break;
-            case 315:   alturaEnfrente = lidar[6][6]; break;
-            
-            default: Alert("Compass no reconocido " + compass); break;
+        int alturaBuscada = -1;
+//        switch(angulo){
+//            case 0:     alturaBuscada = lidar[5][6]; break;
+//            case 45:    alturaBuscada = lidar[4][6]; break;
+//            case 90:    alturaBuscada = lidar[4][5]; break;
+//            case 135:   alturaBuscada = lidar[4][4]; break;
+//            case 180:   alturaBuscada = lidar[5][4]; break;
+//            case 225:   alturaBuscada = lidar[6][4]; break;
+//            case 270:   alturaBuscada = lidar[6][5]; break;
+//            case 315:   alturaBuscada = lidar[6][6]; break;
+//            
+//            default: Alert("Angulo no reconocido " + angulo); break;
+//        }
+//        
+//        return alturaBuscada;
+        
+        // Mapea por rangos, mas ineficiente que Switch
+        // pero mas flexible y adaptativo
+        if (angulo >= 0 && angulo < 45) {
+            alturaBuscada = lidar[5][6];
+        } else if (angulo >= 45 && angulo < 90) {
+            alturaBuscada = lidar[4][6];
+        } else if (angulo >= 90 && angulo < 135) {
+            alturaBuscada = lidar[4][5];
+        } else if (angulo >= 135 && angulo < 180) {
+            alturaBuscada = lidar[4][4]; 
+        } else if (angulo >= 180 && angulo < 225) {
+            alturaBuscada = lidar[5][4];
+        } else if (angulo >= 225 && angulo < 270) {
+            alturaBuscada = lidar[6][4];
+        } else if (angulo >= 270 && angulo < 315) {
+            alturaBuscada = lidar[6][5];
+        } else if (angulo >= 315 && angulo < 360) {
+            alturaBuscada = lidar[6][6];
+        } else {
+            Alert("Angulo no reconocido " + angulo); 
+            alturaBuscada = -1;
         }
         
-        return alturaEnfrente;
+        return alturaBuscada;
     }
     
     
@@ -371,7 +427,7 @@ public class Practica2 extends LARVAFirstAgent{
             
             // -------------------------------------------------------------- //
             // Realizar la ejecucion de la accion
-            ejecucionCorrecta = myExecuteAction(nextAction);
+            ejecucionCorrecta = myExecuteAction(nextAction);            
         }  
         
         
