@@ -6,7 +6,7 @@ import jade.lang.acl.ACLMessage;
 import swing.LARVACompactDash;
 import swing.LARVADash;
 
-public class MyFirstTieFighter extends LARVAFirstAgent{
+public class Practica1 extends LARVAFirstAgent{
 
     enum Status {
         CHECKIN, CHECKOUT, OPENPROBLEM, 
@@ -15,7 +15,7 @@ public class MyFirstTieFighter extends LARVAFirstAgent{
     }
     
     Status mystatus;
-    String service = "PManager", problem = "Batuu",
+    String service = "PManager", problem = "Dagobah",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
