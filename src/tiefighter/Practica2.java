@@ -23,7 +23,7 @@ public class Practica2 extends LARVAFirstAgent{
     // P2-basicos: Abafar Batuu Chandrila Dathomir Endor 
     // P2-avanzados: Felucia Hoth Mandalore Tatooine
     
-    String service = "PManager", problem = "Felucia",
+    String service = "PManager", problem = "Hoth",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
@@ -54,6 +54,8 @@ public class Practica2 extends LARVAFirstAgent{
     
     // indica que se esta evitando lo que se encuentra a nuestra derecha
     private Boolean evitandoDerecha = true;
+    
+    private ArrayList<double[]> casillasProhibidas = new ArrayList<>();
     
     private ArrayList<String> acciones = new ArrayList<>();
     
@@ -284,7 +286,8 @@ public class Practica2 extends LARVAFirstAgent{
                         
                         final int compass = this.myDashboard.getCompass();
                         final double angular = this.myDashboard.getAngular();
-                        double miAltura = myDashboard.getGPS()[2];
+                        final double miCasilla[] = this.myDashboard.getGPS();
+                        double miAltura = miCasilla[2];
 
                         // ------------------------------------------------------------------- //
                         /* NUEVO AHMED: 
@@ -313,19 +316,62 @@ public class Practica2 extends LARVAFirstAgent{
                             
                             if (evitandoIzquierda || evitandoDerecha) {
                                 double alturaDireccionAngular = mapearAlturaSegunAngulo((int)angular, lidar);
+                                // obtener la posición de la casilla en ese sentido y comprobar
+                                // si esta en el vector de prohibidas
+                                
+                                double casillaDireccionObjetivo[] = 
+                                        getCasillaDireccionObjetivo(angular, miCasilla);
+//                                
+//                                Alert("Casilla de enfrente es x: " 
+//                                        + casillaDireccionObjetivo[0] 
+//                                        + " y: " + casillaDireccionObjetivo[1]
+//                                        + " numero de casillas prohibidas: " + casillasProhibidas.size()
+//                                );
+                                
+                                
+//                                int casillaDireccionAngular[] = getCasillaAngulo(angulo, mydashBoard.getBoolean encontrada = false;
+                                
+                                Boolean encontrada = false;
+                                for (double g[]: casillasProhibidas) {
+                                    if (g[0] == casillaDireccionObjetivo[0] 
+                                            && g[1] == casillaDireccionObjetivo[1]) {
+                                        encontrada = true;
+                                        break;
+                                    }
+                                        
+                                }
+                                
+                                if (!encontrada || alturaDireccionAngular < miAltura) {
+                                    evitandoIzquierda = evitandoDerecha = false;  
+                                }
+                                
+                                
+                    
                                 
                                 // si la altura de la casilla en direccion el objetivo es inferior a mi
                                 // entonces anulo esquivar y dejo que el algoritmo vuelva a apuntar hacia alla
-                                if (alturaDireccionAngular < miAltura){
-                                  evitandoIzquierda = evitandoDerecha = false;  
-                                }
+//                                if (alturaDireccionAngular < miAltura){
+//                                  evitandoIzquierda = evitandoDerecha = false;  
+//                                }
                             }
                            
                             nextAction = "MOVE";
+                            double casillaDireccionObjetivo[] = 
+                                        getCasillaDireccionObjetivo(compass, miCasilla);
+                            Boolean encontrada = false;
+                                for (double g[]: casillasProhibidas) {
+                                    if (g[0] == casillaDireccionObjetivo[0] 
+                                            && g[1] == casillaDireccionObjetivo[1]) {
+                                        encontrada = true;
+                                        break;
+                                    }
+                                        
+                                }
+                                
                             int alturaEnfrente = mapearAlturaSegunAngulo(compass, lidar);
 
                             // Si enfrente es mas alto que dron hay que subir
-                            if (alturaEnfrente < 0) {
+                            if (alturaEnfrente < 0 || encontrada) {
 
                                 // ------------------------------------------------------------------- //
                                 /* NUEVO AHMED: 
@@ -336,9 +382,13 @@ public class Practica2 extends LARVAFirstAgent{
                                     lo que se nos queda a la izquierda y vicecersa. 
                                     Cualquier sentido de giro es valido.
                                 */
-                                if (miAltura == maxFlight) {
+                                if (miAltura == maxFlight || encontrada) {
                                     nextAction = "RIGHT";
                                     evitandoIzquierda = true;
+                                    
+                                    casillasProhibidas.add(miCasilla);
+                                    
+                                    // casillasProhibidas.add(myDashboard.getGPS());
                                     
                                 } else {
                                     nextAction = "UP";    
@@ -408,6 +458,51 @@ public class Practica2 extends LARVAFirstAgent{
         }
         
         return alturaBuscada;
+    }
+    
+    // Metodo que devuelve las coordenadas de la casilla que se este apuntando
+    // con el angulo desde la casilla actual indicada por gps[]
+    private double [] getCasillaDireccionObjetivo(double angulo, final double gps[]) {
+        double casillaCalculada [] = gps;
+        
+          if (angulo >= 0 && angulo < 45) {
+            casillaCalculada[1]++;
+//            alturaBuscada = lidar[5][6];
+        } else if (angulo >= 45 && angulo < 90) {
+            casillaCalculada[0]--;
+            casillaCalculada[1]++;
+            
+//            alturaBuscada = lidar[4][6];
+        } else if (angulo >= 90 && angulo < 135) {
+            casillaCalculada[0]--;
+            
+//            alturaBuscada = lidar[4][5];
+        } else if (angulo >= 135 && angulo < 180) {
+            casillaCalculada[0]--;
+            casillaCalculada[1]--;
+//            alturaBuscada = lidar[4][4]; 
+        } else if (angulo >= 180 && angulo < 225) {
+            casillaCalculada[1]--;
+//            alturaBuscada = lidar[5][4];
+        } else if (angulo >= 225 && angulo < 270) {
+            casillaCalculada[0]++;
+            casillaCalculada[1]--;
+            
+//            alturaBuscada = lidar[6][4];
+        } else if (angulo >= 270 && angulo < 315) {
+            casillaCalculada[0]++;
+//            alturaBuscada = lidar[6][5];
+        } else if (angulo >= 315 && angulo < 360) {
+            casillaCalculada[0]++;
+            casillaCalculada[1]++;
+            
+//            alturaBuscada = lidar[6][6];
+        } else {
+            Alert("Angulo no reconocido " + angulo); 
+            casillaCalculada[0] = casillaCalculada[1] = -1;
+        }
+          
+        return casillaCalculada;
     }
     
     
