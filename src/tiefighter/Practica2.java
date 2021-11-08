@@ -50,10 +50,12 @@ public class Practica2 extends LARVAFirstAgent{
     private double umbralCercaniaRecarga;
     
     // indica que estamos evitando lo que se encuentre a nuestra izquierda
-    private Boolean evitandoIzquierda = false;
+//    private Boolean evitandoIzquierda = false;
     
     // indica que se esta evitando lo que se encuentra a nuestra derecha
-    private Boolean evitandoDerecha = true;
+//    private Boolean evitandoDerecha = true;
+    // para indicar que el tiefighter esta esquivando ciertos obstaculos
+    private boolean evitando = false;
     
     private ArrayList<double[]> casillasProhibidas = new ArrayList<>();
     
@@ -288,111 +290,86 @@ public class Practica2 extends LARVAFirstAgent{
                         final double angular = this.myDashboard.getAngular();
                         final double miCasilla[] = this.myDashboard.getGPS();
                         double miAltura = miCasilla[2];
-
-                        // ------------------------------------------------------------------- //
-                        /* NUEVO AHMED: 
-                            si se esta evitando ir por la izquierda o la derecha
-                            no se pasa a calcular la distancia de giro minima, 
-                            directamente se descarta dar un giro (independientemente
-                            del sentido que se este esquivando)
-                        */
-                        double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
-                        if( distanciaAngulo >= 45 && !(evitandoIzquierda || evitandoDerecha)) {
-                           
-                            // Elegir distancia de giro minimo
-                            if ( distanciaAngulo < gradoTotal/2 ) {
-                                 nextAction = "LEFT";       
-                            }
-                            else {
-                                 nextAction = "RIGHT"; 
-                            }
-                        } else {
-                            // ------------------------------------------------------------------- //
-                            /* NUEVO AHMED: 
-                                Si se esta esquivando algun lado, se comprueba
-                                la altura en direccion objetivo, si es menor a 
-                                la nuestra entonce se avanza hacia alla
-                            */
-                            
-                            if (evitandoIzquierda || evitandoDerecha) {
+                        
+//                        double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
+                        if( !apuntandoHaciaObjetivo(angular, compass)) {
+                            if (!evitando) {
+                                nextAction = getGiroMinimo(angular, compass);
+                               
+                            } else {
                                 double alturaDireccionAngular = mapearAlturaSegunAngulo((int)angular, lidar);
-                                // obtener la posición de la casilla en ese sentido y comprobar
-                                // si esta en el vector de prohibidas
+                                double casilladireccionAngular[] = getCasillaDireccionObjetivo(angular, miCasilla);
                                 
-                                double casillaDireccionObjetivo[] = 
-                                        getCasillaDireccionObjetivo(angular, miCasilla);
-//                                
-//                                Alert("Casilla de enfrente es x: " 
-//                                        + casillaDireccionObjetivo[0] 
-//                                        + " y: " + casillaDireccionObjetivo[1]
-//                                        + " numero de casillas prohibidas: " + casillasProhibidas.size()
-//                                );
-                                
-                                
-//                                int casillaDireccionAngular[] = getCasillaAngulo(angulo, mydashBoard.getBoolean encontrada = false;
-                                
-                                Boolean encontrada = false;
-                                for (double g[]: casillasProhibidas) {
-                                    if (g[0] == casillaDireccionObjetivo[0] 
-                                            && g[1] == casillaDireccionObjetivo[1]) {
-                                        encontrada = true;
-                                        break;
+                                if (esAccesible(casilladireccionAngular)) {
+                                    if (alturaDireccionAngular >= 0 || 
+                                            (alturaDireccionAngular < 0 && miAltura < maxFlight)){
+                                        nextAction = getGiroMinimo(angular, compass);
+                                        evitando = false;   
                                     }
+                                    
+                                    
+                                    Info("\n\n\n----\n\n----SIGUIENTE ACCION SERA GIRAR DEJAMOS DE EVITAR\n\n");
+                                } else {
+                                    
+                                    
+                                    double alturaDireccionCompass = mapearAlturaSegunAngulo(compass, lidar);
+                                    double casillaDireccionCompass[] = getCasillaDireccionObjetivo(compass, miCasilla);
+                                    
+                                    
+                                    Info("Siguiente casilla según compass es: " + 
+                                            casillaDireccionCompass[0] 
+                                            + ":" + 
+                                            casillaDireccionCompass[1]);
+                                    
+                                    if (esAccesible(casillaDireccionCompass) && alturaDireccionCompass >= 0) {
                                         
+                                        if (esAccesible(miCasilla)) casillasProhibidas.add(miCasilla);
+                                        nextAction = "MOVE";
+                                        
+                                        Info("\n\n\n\nSIGUIENTE ACCION SERA MOVE, PERO SEGUIMOS EVITANDO\n\n");
+                                        Info("Diferencia entre compass y angular: " + getDistanciaEntreAngulos(angular, compass));
+//                                        evitando = false;
+                                        if (getDistanciaEntreAngulos(compass, angular) == gradoTotal/2) evitando = false;
+                                    } else {
+                                        // girar para evitar nuevamente la 
+                                        // casilla de enfrente
+                                        nextAction = "LEFT";
+                                        
+                                    }
                                 }
-                                
-                                if (!encontrada || alturaDireccionAngular < miAltura) {
-                                    evitandoIzquierda = evitandoDerecha = false;  
-                                }
-                                
-                                
-                    
-                                
-                                // si la altura de la casilla en direccion el objetivo es inferior a mi
-                                // entonces anulo esquivar y dejo que el algoritmo vuelva a apuntar hacia alla
-//                                if (alturaDireccionAngular < miAltura){
-//                                  evitandoIzquierda = evitandoDerecha = false;  
-//                                }
                             }
                            
-                            nextAction = "MOVE";
-                            double casillaDireccionObjetivo[] = 
-                                        getCasillaDireccionObjetivo(compass, miCasilla);
-                            Boolean encontrada = false;
-                                for (double g[]: casillasProhibidas) {
-                                    if (g[0] == casillaDireccionObjetivo[0] 
-                                            && g[1] == casillaDireccionObjetivo[1]) {
-                                        encontrada = true;
-                                        break;
+                            
+                        } else {
+                            
+                            double alturaDireccionCompass = mapearAlturaSegunAngulo(compass, lidar);
+                            double casillaDireccionCompass[] = getCasillaDireccionObjetivo(compass, miCasilla);
+                            
+                            Info("\n\nCasilla direccion compass es " +  
+                                    casillaDireccionCompass[0] 
+                                    + ":" + 
+                                    casillaDireccionCompass[1]);
+                            
+                            if (esAccesible(casillaDireccionCompass)) {
+                                if (alturaDireccionCompass < 0) {
+                                    if (miAltura == maxFlight) {
+                                        // No podemos avanzar, debemos evitar
+                                        if (esAccesible(miCasilla)) casillasProhibidas.add(miCasilla);
+                                        evitando = true;
+                                        nextAction = "LEFT";
+                                    } else {
+                                        // Debemos subir para avanzar
+                                        nextAction = "UP";
                                     }
-                                        
-                                }
-                                
-                            int alturaEnfrente = mapearAlturaSegunAngulo(compass, lidar);
-
-                            // Si enfrente es mas alto que dron hay que subir
-                            if (alturaEnfrente < 0 || encontrada) {
-
-                                // ------------------------------------------------------------------- //
-                                /* NUEVO AHMED: 
-                                    Si estamos a maxima altura de vuelo, 
-                                    entonces no podemos avanzar a la casilla de
-                                    enfrente, tenemos que comenzar a evitar 
-                                    casillas. Si giramos a la derecha, evitamos
-                                    lo que se nos queda a la izquierda y vicecersa. 
-                                    Cualquier sentido de giro es valido.
-                                */
-                                if (miAltura == maxFlight || encontrada) {
-                                    nextAction = "RIGHT";
-                                    evitandoIzquierda = true;
-                                    
-                                    casillasProhibidas.add(miCasilla);
-                                    
-                                    // casillasProhibidas.add(myDashboard.getGPS());
-                                    
                                 } else {
-                                    nextAction = "UP";    
+                                    // Si la casilla de enfrente es inferior a mi
+                                    nextAction = "MOVE";
                                 }
+                            } else {
+                                if (esAccesible(miCasilla)) 
+                                    casillasProhibidas.add(miCasilla);
+                                evitando = true;
+                                nextAction = "LEFT";
                             }
                         }
                     } else {
@@ -411,28 +388,80 @@ public class Practica2 extends LARVAFirstAgent{
             }
         }
         
+//        if (nextAction == "MOVE") {
+//            double casilla[] = getCasillaDireccionObjetivo(myDashboard.getCompass(), myDashboard.getGPS());
+//            
+//            for (double c[]: casillasProhibidas) {
+//                if (c[0] == casilla[0] && c[1] == casilla[1]) {
+//                    nextAction = "LEFT";
+//                    evitando = true;
+//                    
+//                    Info("VAS A HACER MOVE A UNA CASILLA PROHIBIDA, IDIOTA"); 
+//                    break;
+//                }
+//            }
+//        } 
+
+
+        String casillasInfo = "\n\n\nCASILLAS PROHIBIDAS:\n";
+        for (double c[]: casillasProhibidas){
+            casillasInfo += c[0] + ":" + c[1] + "\n";
+        }
+        
+        casillasInfo += "\n\n\n";
+        
+        Info(casillasInfo); 
         return nextAction;
     }
+    
+    // Devuelve la ditancia entre dos angulos sobre el grado total definido
+    private double getDistanciaEntreAngulos(final double d1, final double d2) {
+     return ((d1 - d2 + gradoTotal) % gradoTotal);   
+    }
+    
+    // Devuelve true si la diferencia entre angular y 
+    // compass es un giro o menos
+    private boolean apuntandoHaciaObjetivo(final double angular, final double compass) {
+        double distanciaAngulo = getDistanciaEntreAngulos(angular, compass);
+        return (distanciaAngulo < 45);
+    }
+    
+    
+    // Devuelve la accion de giro que lleve el menor numero de 
+    // acciones para que el compass apunte hacia donde el angular
+    private String getGiroMinimo(final double angular, final double compass) {
+        double distanciaAngulo = getDistanciaEntreAngulos(angular, compass);
+        
+        // Elegir distancia de giro minimo
+        if ( distanciaAngulo < gradoTotal/2 ) {
+            return "LEFT";       
+        }
+        else {
+            return "RIGHT"; 
+        }
+    }
+    
+    // Metodo que devuelve si una casilla es accesible o no
+    // Busca la casilla pasada en la lista de prohibidas, si la encuentra
+    // devuelve false, si no la encuentra, entonces true.
+    private boolean esAccesible(final double casilla[]) {
+        boolean accesible = true;
+        for (double c[]: casillasProhibidas) {
+            if (c[0] == casilla[0] && c[1] == casilla[1]) {
+                accesible = false;
+                break;
+            }      
+        }
+        
+        // False si la encuentra, true en otro caso
+        return accesible;
+    };
     
     // Metodo privado que devuelve la altura de la casilla que se encuentre
     // en la direccion que apunte el compass (sobre el lidar pasado)
     private int mapearAlturaSegunAngulo (final int angulo, final int lidar [][]) {
         // Hallar altura casilla de enfrente
         int alturaBuscada = -1;
-//        switch(angulo){
-//            case 0:     alturaBuscada = lidar[5][6]; break;
-//            case 45:    alturaBuscada = lidar[4][6]; break;
-//            case 90:    alturaBuscada = lidar[4][5]; break;
-//            case 135:   alturaBuscada = lidar[4][4]; break;
-//            case 180:   alturaBuscada = lidar[5][4]; break;
-//            case 225:   alturaBuscada = lidar[6][4]; break;
-//            case 270:   alturaBuscada = lidar[6][5]; break;
-//            case 315:   alturaBuscada = lidar[6][6]; break;
-//            
-//            default: Alert("Angulo no reconocido " + angulo); break;
-//        }
-//        
-//        return alturaBuscada;
         
         // Mapea por rangos, mas ineficiente que Switch
         // pero mas flexible y adaptativo
@@ -466,35 +495,35 @@ public class Practica2 extends LARVAFirstAgent{
         double casillaCalculada [] = gps;
         
           if (angulo >= 0 && angulo < 45) {
-            casillaCalculada[1]++;
+            casillaCalculada[0]++;
 //            alturaBuscada = lidar[5][6];
         } else if (angulo >= 45 && angulo < 90) {
-            casillaCalculada[0]--;
-            casillaCalculada[1]++;
+            casillaCalculada[1]--;
+            casillaCalculada[0]++;
             
 //            alturaBuscada = lidar[4][6];
         } else if (angulo >= 90 && angulo < 135) {
-            casillaCalculada[0]--;
+            casillaCalculada[1]--;
             
 //            alturaBuscada = lidar[4][5];
         } else if (angulo >= 135 && angulo < 180) {
-            casillaCalculada[0]--;
             casillaCalculada[1]--;
+            casillaCalculada[0]--;
 //            alturaBuscada = lidar[4][4]; 
         } else if (angulo >= 180 && angulo < 225) {
-            casillaCalculada[1]--;
+            casillaCalculada[0]--;
 //            alturaBuscada = lidar[5][4];
         } else if (angulo >= 225 && angulo < 270) {
-            casillaCalculada[0]++;
-            casillaCalculada[1]--;
+            casillaCalculada[1]++;
+            casillaCalculada[0]--;
             
 //            alturaBuscada = lidar[6][4];
         } else if (angulo >= 270 && angulo < 315) {
-            casillaCalculada[0]++;
+            casillaCalculada[1]++;
 //            alturaBuscada = lidar[6][5];
         } else if (angulo >= 315 && angulo < 360) {
-            casillaCalculada[0]++;
             casillaCalculada[1]++;
+            casillaCalculada[0]++;
             
 //            alturaBuscada = lidar[6][6];
         } else {
