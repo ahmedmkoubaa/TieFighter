@@ -23,7 +23,7 @@ public class Practica2 extends LARVAFirstAgent{
     // P2-basicos: Abafar Batuu Chandrila Dathomir Endor 
     // P2-avanzados: Felucia Hoth Mandalore Tatooine Wobani
     
-    String service = "PManager", problem = "Tatooine",
+    String service = "PManager", problem = "Felucia",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
@@ -313,7 +313,7 @@ public class Practica2 extends LARVAFirstAgent{
                             int alturaEnfrente = mapearAlturaSegunAngulo(compass, lidar);
                             double [] casillaEnfrente = getCasillaSegunAngulo(compass, this.myDashboard.getGPS());
                             boolean casillaEnfrenteProhibida = 
-                                    estaCasillaProhibida(casillaEnfrente, " ");
+                                    estaCasillaProhibida(casillaEnfrente, "COMPASS");
 
                             // Si enfrente es mas alto que dron hay que subir
                             if (alturaEnfrente < 0 || casillaEnfrenteProhibida){
@@ -326,7 +326,7 @@ public class Practica2 extends LARVAFirstAgent{
                                     nextAction = "LEFT";
                                     evitando = true;
                                                                         
-                                    if(!estaCasillaProhibida(myDashboard.getGPS(), " ")){
+                                    if(!estaCasillaProhibida(myDashboard.getGPS(), "MAXFLIGHT")){
                                         casillasProhibidas.add(myDashboard.getGPS());
                                     }
                                 } else {
@@ -373,25 +373,29 @@ public class Practica2 extends LARVAFirstAgent{
                                         
                                         if (esAccesible) {
 //                                            evitando = false; // DESCOMENTAR PARA TENER VIEJA VERSION
+
                                             if (objetivo == angular) {
                                                 evitando = false;
-//                                                Alert("COINCIDEN OBJ Y ANG FALSE EVITAR");
                                                 
                                                 infoCasillasProhibidas();
+//                                                Alert("COINCIDEN OBJ Y ANG FALSE EVITAR " + casillasProhibidas.size());
+
                                             } else {
 //                                                Alert("CASILLA ANIADIDA POR NO PODER IR A ANGULAR");    
                                                 if(!estaCasillaProhibida(myDashboard.getGPS() , " ")){
                                                     casillasProhibidas.add(myDashboard.getGPS());
-                                                }
-                                                
-                                                if (distanciaEntreAngulos(objetivo, compass) >= umbralGiro) {
-                                                    nextAction = orientarnosHaciaAngulo(objetivo, compass);
-                                                } else {
-                                                    nextAction = "MOVE";
-                                                }
+                                                }   
+                                            }
+                                            
+                                            if (distanciaEntreAngulos(objetivo, compass) >= umbralGiro) {
+                                                nextAction = orientarnosHaciaAngulo(objetivo, compass);
+                                            } else {
+                                                nextAction = "MOVE";
+                                            }
+
 
     //                                            Alert("ACCESIBLE--> ACCION ES: " + nextAction);
-                                            }
+    
                                                                                             //                                            Alert("OBJETIVO ES: " + objetivo + " ANGULO ES: " + angulo);
 
 

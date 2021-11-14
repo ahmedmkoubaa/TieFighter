@@ -10,7 +10,7 @@ public class TieFighter {
         
         connection.Boot("isg2.ugr.es", 1099);
 //        connection.launchAgent("AMK-7", Practica1.class);
-        connection.launchAgent("AMK-9", Practica2.class);
+        connection.launchAgent("AMK-14", Practica2MinimalVersion.class);
         connection.WaitToShutDown();
        
     }
