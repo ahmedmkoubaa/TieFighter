@@ -75,7 +75,7 @@ public class Practica2MinimalVersion extends LARVAFirstAgent{
                 "VISUAL",     // SI
                 "ENERGY",     // SI
                 "PAYLOAD",    // SI
-//                "DISTANCE",   // NO
+                "DISTANCE",   // SI
                 "ANGULAR",    // SI
 //                "THERMAL"     // No
             };
@@ -86,7 +86,7 @@ public class Practica2MinimalVersion extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-        this.enableDeepLARVAMonitoring();
+//        this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
         mystatus = Status.CHECKIN;
         exit = false;
