@@ -18,35 +18,6 @@ public class Practica2MinimalVersion extends LARVAFirstAgent{
     }
     
     
-    public class Pair<L,R> {
-
-        private final L left;
-        private final R right;
-
-        public Pair(L left, R right) {
-          assert left != null;
-          assert right != null;
-
-          this.left = left;
-          this.right = right;
-        }
-
-        public L getLeft() { return left; }
-        public R getRight() { return right; }
-
-        @Override
-        public int hashCode() { return left.hashCode() ^ right.hashCode(); }
-
-        @Override
-        public boolean equals(Object o) {
-          if (!(o instanceof Pair)) return false;
-          Pair pairo = (Pair) o;
-          return this.left.equals(pairo.getLeft()) &&
-                 this.right.equals(pairo.getRight());
-        }
-
-    }
-    
     Status mystatus;
     
     // MUNDOS 
@@ -54,7 +25,7 @@ public class Practica2MinimalVersion extends LARVAFirstAgent{
     // P2-basicos: Abafar Batuu Chandrila Dathomir Endor 
     // P2-avanzados: Felucia Hoth Mandalore Tatooine Wobani
     // P2-sorpresas: Zeffo
-    String service = "PManager", problem = "Wobani",
+    String service = "PManager", problem = "Zeffo",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
@@ -83,12 +54,8 @@ public class Practica2MinimalVersion extends LARVAFirstAgent{
     // Umbral a partir del cual se girara para 
     // orientarse desde el compass al angular
     private final int umbralGiro = gradoTotal/8;
-    
-    // indica que estamos evitando un obstaculo
-    private Boolean evitando = false;
-    private boolean avanzando = false;
-    
-
+       
+    private int sentidoGiro = 1;
     
     private ArrayList<double[]> casillasProhibidas = new ArrayList<>();
     
@@ -100,17 +67,17 @@ public class Practica2MinimalVersion extends LARVAFirstAgent{
     String[] contentTokens,
             mySensors = new String[] {
                 "ALIVE",
-                "ONTARGET",   // No 
-                "GPS",        
-                "COMPASS",
-                "LIDAR",
-                "ALTITUDE",   // No
-                "VISUAL",     // No
-                "ENERGY",
-                "PAYLOAD",
-                "DISTANCE",   // NO
-                "ANGULAR",
-                "THERMAL"     // No
+//                "ONTARGET",   // No 
+                "GPS",        // SI
+                "COMPASS",    // SI
+                "LIDAR",      // SI
+                "ALTITUDE",   // SI
+                "VISUAL",     // SI
+                "ENERGY",     // SI
+                "PAYLOAD",    // SI
+//                "DISTANCE",   // NO
+                "ANGULAR",    // SI
+//                "THERMAL"     // No
             };
     boolean step = true;
 
@@ -308,20 +275,14 @@ public class Practica2MinimalVersion extends LARVAFirstAgent{
 
         // Si enfrente es mas alto que dron hay que subir
         if (alturaEnfrente < 0 || casillaEnfrenteProhibida){
-//      Alert("CASILLA ENFRENTE ESTA PROHIBIDA O ES MAS ALTA QUE YO");
+
             if(casillaEnfrenteProhibida){
                 nextAction = "LEFT";                       
-//                nextAction = buscarCasillaMasPrometedora();
             }else if (miAltura == maxFlight) {
                 nextAction = "LEFT";
-//                nextAction = buscarCasillaMasPrometedora();
-                
-//                if(!estaCasillaProhibida(myDashboard.getGPS(), "MAXFLIGHT")){
-//                    casillasProhibidas.add(myDashboard.getGPS());
-//                }
             } else {
                 nextAction = "UP";
-//              evitando = false;
+
             }
         }
         
@@ -339,36 +300,50 @@ public class Practica2MinimalVersion extends LARVAFirstAgent{
         int angulo = 0;
         boolean esAccesible = false;
                                         
-        double casilla[] = null;
-        double alturaLidar;
+        double[] casillaObjetivo = null;
+        
         int visual = -1;
         int sentido = 1;
         int factor = 1;
         final int maxFactor = 4;
-        int thermal = -1;
+        
                                    
-//        ArrayList<Pair<Double, Integer>> resultados = new ArrayList<>();
-
-        // Buscar una casilla accesible y lo mas cercana 
+        // Buscar una casillaObjetivo accesible y lo mas cercana 
         // al angulo que nos indica el angular
         while (!esAccesible && factor <= maxFactor) {
 
             objetivo = (angular + angulo +  gradoTotal) % gradoTotal;
-            casilla = getCasillaSegunAngulo( objetivo, myDashboard.getGPS());
+            casillaObjetivo = getCasillaSegunAngulo( objetivo, myDashboard.getGPS());
 
             visual = getVisualSegunAngulo( objetivo , this.myDashboard.getVisual() );
             
-            esAccesible =
-                (!estaCasillaProhibida(casilla, "BUCLE") && visual >= 0 && visual <= maxFlight );
-            
-            if (problem == "Felucia") {
-                angulo = sentido * incremento * factor;
-                if (sentido < 0) factor++;
-                sentido *= -1;   
-            } else {
-                angulo += incremento;
+           
+
+            if ((sentidoGiro > 0) &&                    
+                    (casillaObjetivo[0] < 0 
+                    || casillaObjetivo[0] >= width 
+                    || casillaObjetivo[1] < 0 
+                    || casillaObjetivo[1] >= height)) {
+                // INVERTIR SENTIDO DE GIRO
+                sentidoGiro = -1;
+                Alert("SENTIDO INVERTIDO AHORA ES: " + sentidoGiro);
             }
+            esAccesible =
+                (!estaCasillaProhibida(casillaObjetivo, "BUCLE") && visual >= 0 && visual <= maxFlight );
             
+            angulo += (sentidoGiro * incremento);
+            
+            Info("El angulo es: " +  angulo);
+            
+            
+//            if (false) {
+//                angulo = sentido * incremento * factor;
+//                if (sentido < 0) factor++;
+//                sentido *= -1;   
+//            } else {
+//                angulo += incremento;
+//            }
+//            
             
                                             
             Info("Sigo en bucle buscando un angulo de giro interesante");
@@ -378,7 +353,7 @@ public class Practica2MinimalVersion extends LARVAFirstAgent{
             
         if (esAccesible) {
             Info("\n\nESTA ES LA CASILLA ACCESIBLE QUE ENCONTRÉ: " 
-                 + casilla[0] + ":" + casilla[1] + ":" + casilla[2]
+                 + casillaObjetivo[0] + ":" + casillaObjetivo[1] + ":" + casillaObjetivo[2]
                  + " su visual es: " + visual);
 //              evitando = false; // DESCOMENTAR PARA TENER VIEJA VERSION
 
@@ -403,7 +378,11 @@ public class Practica2MinimalVersion extends LARVAFirstAgent{
             // OBTENGO LA CASILLA EN CUESTIÓN Y LA ELIMINO DE PROHIBIDAS
             objetivo = (compass + gradoTotal/2) % gradoTotal;
             nextAction = orientarnosHaciaAngulo(objetivo, compass);
-            eliminarCasillaProhibida(getCasillaSegunAngulo(objetivo, casilla));
+            eliminarCasillaProhibida(getCasillaSegunAngulo(objetivo, casillaObjetivo));
+            
+            if(!estaCasillaProhibida(this.myDashboard.getGPS() , "INSERTANDO")){
+                casillasProhibidas.add(this.myDashboard.getGPS());
+            }  
         }
         
         if (objetivo != angular) {
@@ -470,10 +449,7 @@ public class Practica2MinimalVersion extends LARVAFirstAgent{
             
         }
         
-        Info("\n\n\n\n");
-        if (evitando) Info("evitando TRUE");
-        else Info("evitando FALSE");
-        Info("\n\n\n\n");
+  
         
         return nextAction;
     }
@@ -494,7 +470,7 @@ public class Practica2MinimalVersion extends LARVAFirstAgent{
     }
     
     
-    // Busca la casilla y la elimina si la encuentra
+    // Busca la casillaObjetivo y la elimina si la encuentra
     private void eliminarCasillaProhibida(final double [] casilla) {
         
         int inicio = casillasProhibidas.size() - 1;
@@ -572,33 +548,33 @@ public class Practica2MinimalVersion extends LARVAFirstAgent{
         return casillaFinal;  
     }
     
-    private int getThermalSegunAngulo(final double angulo, final int[][] thermal){
-        int thermalBuscado = -1;
-        
-         if (angulo >= 0 && angulo < 45) {
-            thermalBuscado = thermal[5][6];
-        } else if (angulo >= 45 && angulo < 90) {
-            thermalBuscado = thermal[4][6];
-        } else if (angulo >= 90 && angulo < 135) {
-            thermalBuscado = thermal[4][5];
-        } else if (angulo >= 135 && angulo < 180) {
-            thermalBuscado = thermal[4][4]; 
-        } else if (angulo >= 180 && angulo < 225) {
-            thermalBuscado = thermal[5][4];
-        } else if (angulo >= 225 && angulo < 270) {
-            thermalBuscado = thermal[6][4];
-        } else if (angulo >= 270 && angulo < 315) {
-            thermalBuscado = thermal[6][5];
-        } else if (angulo >= 315 && angulo < 360) {
-            thermalBuscado = thermal[6][6];
-        } else {
-            Alert("Angulo no reconocido " + angulo); 
-            thermalBuscado = -1;
-        }
-         
-        return thermalBuscado;
-    }
-   
+//    private int getThermalSegunAngulo(final double angulo, final int[][] thermal){
+//        int thermalBuscado = -1;
+//        
+//         if (angulo >= 0 && angulo < 45) {
+//            thermalBuscado = thermal[5][6];
+//        } else if (angulo >= 45 && angulo < 90) {
+//            thermalBuscado = thermal[4][6];
+//        } else if (angulo >= 90 && angulo < 135) {
+//            thermalBuscado = thermal[4][5];
+//        } else if (angulo >= 135 && angulo < 180) {
+//            thermalBuscado = thermal[4][4]; 
+//        } else if (angulo >= 180 && angulo < 225) {
+//            thermalBuscado = thermal[5][4];
+//        } else if (angulo >= 225 && angulo < 270) {
+//            thermalBuscado = thermal[6][4];
+//        } else if (angulo >= 270 && angulo < 315) {
+//            thermalBuscado = thermal[6][5];
+//        } else if (angulo >= 315 && angulo < 360) {
+//            thermalBuscado = thermal[6][6];
+//        } else {
+//            Alert("Angulo no reconocido " + angulo); 
+//            thermalBuscado = -1;
+//        }
+//         
+//        return thermalBuscado;
+//    }
+//   
     
     private int getVisualSegunAngulo(double angulo, int[][] visual){
         int visualBuscado = -1;
@@ -627,10 +603,10 @@ public class Practica2MinimalVersion extends LARVAFirstAgent{
         return visualBuscado;
      }
     
-    // Metodo privado que devuelve la altura de la casilla que se encuentre
+    // Metodo privado que devuelve la altura de la casillaObjetivo que se encuentre
     // en la direccion que apunte el compass (sobre el lidar pasado)
     private int mapearAlturaSegunAngulo (final double angulo, final int lidar [][]) {
-        // Hallar altura casilla de enfrente
+        // Hallar altura casillaObjetivo de enfrente
         int alturaBuscada = -1;
 //        switch(angulo){
 //            case 0:     alturaBuscada = lidar[5][6]; break;
