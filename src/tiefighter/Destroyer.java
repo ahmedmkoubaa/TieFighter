@@ -1,6 +1,7 @@
 package tiefighter;
 
 import agents.LARVAFirstAgent;
+import geometry.Point;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import java.util.ArrayList;
@@ -270,12 +271,9 @@ public class Destroyer extends LARVAFirstAgent{
             * @author Antonio
             */
             
-            // Se supone que aqui falta la primitiva CONVID:SESSIONID
-            // No entiendo a que se refire realmente, si a la <session id> o a
-            // poner literalmente SESSIONID
-            outbox.setContent("Request product " + s 
-                             + " session " + sessionKey 
-                             + " CONVID:SESSIONID");
+            // Ponemos contenido del mensaje y tambien id de la conversacion
+            outbox.setContent("Request product " + s + " session " + sessionKey);
+            outbox.setConversationId(sessionKey);
             
             this.LARVAsend(outbox);
             inbox = this.LARVAblockingReceive();
@@ -440,6 +438,10 @@ public class Destroyer extends LARVAFirstAgent{
         this.LARVAsend(outbox);
         
         // Esperar tantas respuestas como cfp a agente se hayan enviado
+        ncfp = 1; // TRAMPA
+        
+        int ninf = 0;
+        
         while (ncfp > 0) {
             // Esperar a que algun agente envie algo
             inbox = this.blockingReceive();  
@@ -452,20 +454,28 @@ public class Destroyer extends LARVAFirstAgent{
                 outbox.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 
                 // Coordenadas aleatorias por ahora
-                int x = 10 + ncfp;
+                int x = 10 * ncfp;
                 int y = x;
 
                 outbox.setContent("" + x + " " + y);
                 outbox.setConversationId(sessionKey);
                 outbox.setReplyWith("TAKEOFF " + password);
-                this.LARVAsend(outbox);       
+                this.LARVAsend(outbox);   
                 
                 ncfp--; // Hemos recibido una respuesta a cfp, uno menos
+                ninf++; // Esperamos un nuevo inform de respuesta al accept_propsal
             } else if (inbox.getPerformative() == ACLMessage.INFORM){
                 // Respuesta al accept_proposal
-                Info("CONTENIDO RECIBIDO: " + inbox.getContent());
-            }else {
+                Info("INFORM RECIBIDO: " + inbox.getContent());
+                ninf--; // Hemos recibido un info, uno menos por recibir                
+            } else {
                 Error("RECIBIDO MENSAJE INESPERADO: " + inbox.getPerformative());
+            }
+            
+            while (ninf > 0) {
+                inbox = this.blockingReceive();
+                Info("INFORM RECIBIDO: " + inbox.getContent());
+                ninf--; // Hemos recibido un info, uno menos por recibir 
             }
         }
     }
@@ -780,8 +790,8 @@ public class Destroyer extends LARVAFirstAgent{
         outbox = inbox.createReply();
         outbox.setPerformative(ACLMessage.REQUEST);
         outbox.setConversationId(sessionKey);
-        outbox.setReplyWith("MOVE 5 5 20");
-        outbox.setContent("MOVE 5 5 20");
+        outbox.setReplyWith("MOVE 10 20 20");
+        outbox.setContent("MOVE 10 20 20");
         this.LARVAsend(outbox);
             
         //Recibe agree del tie
