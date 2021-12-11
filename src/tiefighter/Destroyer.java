@@ -57,6 +57,7 @@ public class Destroyer extends LARVAFirstAgent{
         "MOVE", "MOVE", "MOVE", 
         "MOVE", "CAPTURE"
     };
+    
     private int sigAction = 0;
     private final int gradoTotal = 360;
    
@@ -308,8 +309,8 @@ public class Destroyer extends LARVAFirstAgent{
         session.setPerformative(ACLMessage.REQUEST);
         this.send(session);
         
+        // Esperar a obtener respuesta
         session = this.LARVAblockingReceive();
-        
         
         
         String parse[] = session.getContent().split(" ");
@@ -331,9 +332,8 @@ public class Destroyer extends LARVAFirstAgent{
             // Obtener mapa del nivel
             getMapaDelNivel();
             
+            // Reclutar agentes para nuestro equipo
             getRecruitment();
-            
-            
             
             return Status.SOLVEPROBLEM;
         } else {
@@ -409,72 +409,65 @@ public class Destroyer extends LARVAFirstAgent{
         ArrayList<String> fighters = this.DFGetAllProvidersOf("FIGHTER " + password);
         ArrayList<String> corellians = this.DFGetAllProvidersOf("CORELLIAN " + password);
         ArrayList<String> razors = this.DFGetAllProvidersOf("RAZOR " + password);
+        ArrayList<String> agentes = new ArrayList<String>();
         
-        if (fighters.isEmpty()) {
-            Info("NO HAY FIGHTERS REGISTRADOS AUN");
-        }  else {
-            
-            /*
-            
+        // Rellenar vector de agentes con todos los posibles agentes
+        for (String f: fighters)    agentes.add(f);
+        for (String c: corellians)  agentes.add(c);
+        for (String r: razors)      agentes.add(r);
+        
+        // Vamos a enviar un nuevo mensaje
         outbox = new ACLMessage(ACLMessage.CFP);
         outbox.setSender(getAID());
+        
+        // Los receptores del mensaje seran los que obtuvimos previamente
         int ncfp=0;
-        for (String s : listafull) {
+        for (String s : agentes) {
             outbox.addReceiver(new AID(s, AID.ISLOCALNAME));
-            ncfp++;
+            Info("Este agente es: " + s);
+            ncfp++; // contar receptores enviados
         }
-        outbox.setContent(mymap);
+        
+        Info ("El numero de agentes es: " + agentes.size());
+        
+        // Decidimos enviar mapa, lo adjuntamos como contenido
+        outbox.setContent(mapLevel);
         outbox.setConversationId(sessionKey);
         outbox.setOntology("COMMITMENT");
         outbox.setReplyWith("Recruit crew for session " + password);
-        LARVAsend(outbox);
-
-        outbox = session.createReply();
-        outbox.setContent("Query map session " + sessionKey);
-        outbox.setPerformative(ACLMessage.QUERY_REF);
+        
+        // Realizar envio de mensaje
         this.LARVAsend(outbox);
-        session = LARVAblockingReceive();
-        if (session.getPerformative() == ACLMessage.INFORM) {
-            mymap = session.getContent();
-            return Status.RECRUITING;
-        }
-        return Status.EXIT;
-            */
-            this.outbox = new ACLMessage();
-                
-            outbox.setSender(getAID());
-            outbox.addReceiver(new AID(fighters.get(0), AID.ISLOCALNAME));
+        
+        // Esperar tantas respuestas como cfp a agente se hayan enviado
+        while (ncfp > 0) {
+            // Esperar a que algun agente envie algo
+            inbox = this.blockingReceive();  
             
-            outbox.setContent("CFP " + mapLevel);
-            outbox.setConversationId(sessionKey);
-            outbox.setReplyWith("RECRUITMENT " + password);
-            
-            outbox.setPerformative(ACLMessage.CFP);
-            this.LARVAsend(outbox);
-            
-            inbox = this.blockingReceive();
-            
-            
+            // Si es un agree, entonces 
             if (inbox.getPerformative() == ACLMessage.AGREE) {
-                Info("Mensaje recibido con exito !!!");
-                
+                Info("Recibiendo AGREE");
+
                 outbox = inbox.createReply();
                 outbox.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-                outbox.setContent("100 100");
+
+                // Coordenadas aleatorias por ahora
+                int x = 10 + ncfp;
+                int y = x;
+
+                outbox.setContent("" + x + " " + y);
                 outbox.setConversationId(sessionKey);
                 outbox.setReplyWith("TAKEOFF " + password);
-                this.LARVAsend(outbox);                
+                this.LARVAsend(outbox);       
+                
+                ncfp--; // Hemos recibido una respuesta a cfp, uno menos
+            } else if (inbox.getPerformative() == ACLMessage.INFORM){
+                // Respuesta al accept_proposal
+                Info("CONTENIDO RECIBIDO: " + inbox.getContent());
+            }else {
+                Error("RECIBIDO MENSAJE INESPERADO: " + inbox.getPerformative());
             }
         }
-        
-        if (this.DFGetAllProvidersOf("CORELLIAN " + password).isEmpty()){
-            Info("NO HAY CORELLIAN REGISTRADOS AUN");
-        }
-        
-        if (this.DFGetAllProvidersOf("RAZOR " + password).isEmpty()) {
-            Info("NO HAY RAZOR REGISTRADO AUN");
-        }
-        Info("\n\n\n\n\n\n\n");
     }
 
     private String myTakeDecision() {
@@ -769,47 +762,37 @@ public class Destroyer extends LARVAFirstAgent{
     }
     
     
-    // Metodo importante, resuelve el problema que se abra, en este caso
-    // el de Dagobah
+    /*
+    * @author Ahmed 
+    * @author Antonio
+    * @author Raul
+    * @author Jaime
+    */
+    // Metodo principal encapsula toda la logica del agente y 
+    // es lo principal que hace
     public Status MySolveProblem() {
+        /*
+        * @author Jaime
+        * @author Antonio
+        */
         
-        // ------------------------------------------------------------------ //
-        // Obtener informacion de sensores desde LARVA
-        boolean lecturaCorrecta = myReadSensors();
-        boolean ejecucionCorrecta = false;
-        
-        // ------------------------------------------------------------------ //
-        // Tomar una decision
-        if (lecturaCorrecta) {
-            String nextAction = myTakeDecision();
+        //Envia move al tie
+        outbox = inbox.createReply();
+        outbox.setPerformative(ACLMessage.REQUEST);
+        outbox.setConversationId(sessionKey);
+        outbox.setReplyWith("MOVE 5 5 20");
+        outbox.setContent("MOVE 5 5 20");
+        this.LARVAsend(outbox);
             
-            // -------------------------------------------------------------- //
-            // Realizar la ejecucion de la accion
-            ejecucionCorrecta = myExecuteAction(nextAction);            
-        }  
+        //Recibe agree del tie
+        inbox = this.blockingReceive();
+        Info("\n\n\n\n\n");
+        Info("EL TIE SE HA MOVIDO A LA POSICION INDICADA " + inbox.getContent());
         
+        Info("\n\n\n\n\n\n\n");
         
-        // ------------------------------------------------------------------ //
-        // Actualizar estado de la simulacion
-        
-        // Si algo fallo se cierra el problema, en otro caso se sigue
-        if (!ejecucionCorrecta || !lecturaCorrecta) {
-            return Status.CLOSEPROBLEM;
-        } else {
-            
-            // Si tenemos algun objetivo capturado, cerramos el problema
-            if (myDashboard.getPayload()> 0) {
-                Info("Objetivo capturado correctamente, cerrando problema");
-                for (double[] casillasProhibida : casillasProhibidas) {
-                    Info("X: " + casillasProhibida[0] + "Y: " + casillasProhibida[1]+ "Z: "+ casillasProhibida[2]);
-                }
-                return Status.CLOSEPROBLEM;
-            }
-            else { 
-                // En otro caso seguimos resolviendolo
-                return Status.SOLVEPROBLEM;
-            }
-        }
+       return Status.SOLVEPROBLEM;
+           
     }
     
     // lee sensores mediante peticiones al sensorManager, si fue lectura 
