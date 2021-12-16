@@ -23,9 +23,11 @@ public class Practica2 extends LARVAFirstAgent {
     // P1: Dagobah 
     // P2-basicos: Abafar Batuu Chandrila Dathomir Endor 
     // P2-avanzados: Felucia Hoth Mandalore Tatooine Wobani
-    // P2-sorpresas: Zeffo
-    String service = "PManager", problem = "Zeffo",
-            problemManager = "", content, sessionKey,
+
+    
+    String service = "PManager", problem = "Felucia",
+            problemManager = "", content, sessionKey, 
+
             sessionManager, storeManager, sensorKeys;
 
     // Resolver problema de manera sencilla usando
@@ -49,6 +51,7 @@ public class Practica2 extends LARVAFirstAgent {
     // correspondientes a umbrales de recarga
     private double umbralLimiteRecarga;
     private double umbralCercaniaRecarga;
+
 
     // Umbral a partir del cual se girara para 
     // orientarse desde el compass al angular
@@ -85,14 +88,14 @@ public class Practica2 extends LARVAFirstAgent {
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-        this.enableDeepLARVAMonitoring();
+//        this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
         mystatus = Status.CHECKIN;
         exit = false;
 
 //        this.myDashboard = new LARVADash(LARVADash.Layout.DASHBOARD, this);
         this.myDashboard = new LARVADash(this);
-        doActivateLARVADash();
+//        doActivateLARVADash();
     }
 
     @Override
@@ -408,11 +411,12 @@ public class Practica2 extends LARVAFirstAgent {
                 } else {
                     // Si no estamos sobre el objetivo
                     if (this.myDashboard.getDistance() > 0) {
+
                         nextAction = buscarCasillaMasPrometedora();
 //                      avanzando = (nextAction == "MOVE");
 
                         if (nextAction == "MOVE") {
-                            nextAction = moverseHaciaElFrente();
+
                         }
 
                     } else {
@@ -430,10 +434,12 @@ public class Practica2 extends LARVAFirstAgent {
                 Alert("TieFighter sin vida, fin del juego");
             }
 
+
         }
 
         return nextAction;
     }
+
 
     // Devuelve la distancia entre dos angulos
     private double distanciaEntreAngulos(final double a1, final double a2) {
@@ -504,6 +510,7 @@ public class Practica2 extends LARVAFirstAgent {
     private double[] getCasillaSegunAngulo(double angulo, double[] gps) {
         double[] casillaFinal = gps;
 
+
         if (angulo >= 0 && angulo < 45) {
             casillaFinal[0]++;
         } else if (angulo >= 45 && angulo < 90) {
@@ -525,6 +532,7 @@ public class Practica2 extends LARVAFirstAgent {
             casillaFinal[1]++;
             casillaFinal[0]++;
         } else {
+
             Alert("ERROR: getCasillaSegunAngulo, no se detecto el rango --> " + angulo);
         }
 
@@ -589,6 +597,7 @@ public class Practica2 extends LARVAFirstAgent {
     // en la direccion que apunte el compass (sobre el lidar pasado)
     private int mapearAlturaSegunAngulo(final double angulo, final int lidar[][]) {
         // Hallar altura casillaObjetivo de enfrente
+
         int alturaBuscada = -1;
 //        switch(angulo){
 //            case 0:     alturaBuscada = lidar[5][6]; break;
@@ -662,6 +671,7 @@ public class Practica2 extends LARVAFirstAgent {
                 Info("Objetivo capturado correctamente, cerrando problema");
                 for (double[] casillasProhibida : casillasProhibidas) {
                     Info("X: " + casillasProhibida[0] + "Y: " + casillasProhibida[1] + "Z: " + casillasProhibida[2]);
+
                 }
                 return Status.CLOSEPROBLEM;
             } else {
