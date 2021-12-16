@@ -12,7 +12,11 @@ import swing.LARVADash;
 /*
 * @author Jaime
 */
+<<<<<<< HEAD
 public class Practica3TieFighter extends LARVAFirstAgent{
+=======
+public class Practica3_TieFighter extends LARVAFirstAgent{
+>>>>>>> f556defee6117338e6c04d77a8ef9ee837760f6b
 
     enum Status {
         CHECKIN, CHECKOUT, 
@@ -92,8 +96,12 @@ public class Practica3TieFighter extends LARVAFirstAgent{
                 "PAYLOAD",
                 "DISTANCE",
                 "ANGULAR",
+<<<<<<< HEAD
                 "THERMAL",     // No
                 "THERMALHQ"
+=======
+                "THERMAL"     // No
+>>>>>>> f556defee6117338e6c04d77a8ef9ee837760f6b
             };
     boolean step = true;
     
@@ -301,20 +309,27 @@ public class Practica3TieFighter extends LARVAFirstAgent{
     */  
     public Status MySolveProblem() {
         
+<<<<<<< HEAD
         // Recibiendo posicion a la que ir (MOVE X Y Z)
+=======
+>>>>>>> f556defee6117338e6c04d77a8ef9ee837760f6b
         open = this.LARVAblockingReceive();
         int nextX, nextY, nextZ;
         myX = Integer.parseInt(open.getContent().split(" ")[1]);
         myY = Integer.parseInt(open.getContent().split(" ")[2]);
         myZ = Integer.parseInt(open.getContent().split(" ")[3]);
         Info("X: " + myX + ", Y: " + myY + ", Z: " + myZ);
+<<<<<<< HEAD
         
+=======
+>>>>>>> f556defee6117338e6c04d77a8ef9ee837760f6b
         outbox = open.createReply();
         outbox.setPerformative(ACLMessage.AGREE);
         outbox.setConversationId(sessionKey);
         outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
         outbox.setContent("");
         this.LARVAsend(outbox);
+<<<<<<< HEAD
         
         boolean lecturaCorrecta = myReadSensors();
         int cont = 0;
@@ -337,6 +352,18 @@ public class Practica3TieFighter extends LARVAFirstAgent{
             Info("\n\n\n\n");
             Info("el thermal tiene length: " + thermal.length);
             Info("\n\n\n\n");
+=======
+        boolean lecturaCorrecta = myReadSensors();
+        int cont = 0;
+        
+        while(!(myDashboard.getGPS()[0] == myX && myDashboard.getGPS()[1] == myY) && cont < 20){
+            String nextAction = myTakeDecision2();
+            boolean ejecucionCorrecta = myExecuteAction(nextAction);
+            Info("X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
+            Info("Accion: " + nextAction);
+            cont++;
+            lecturaCorrecta = myReadSensors();
+>>>>>>> f556defee6117338e6c04d77a8ef9ee837760f6b
         }
         
         return Status.CHECKOUT;
@@ -393,7 +420,17 @@ public class Practica3TieFighter extends LARVAFirstAgent{
         final double angular = this.myDashboard.getAngular(p);
         double miAltura = myDashboard.getGPS()[2];
 
+<<<<<<< HEAD
         
+=======
+        // ------------------------------------------------------------------- //
+        /* NUEVO AHMED: 
+            si se esta evitando ir por la izquierda o la derecha
+            no se pasa a calcular la distancia de giro minima, 
+            directamente se descarta dar un giro (independientemente
+            del sentido que se este esquivando)
+        */
+>>>>>>> f556defee6117338e6c04d77a8ef9ee837760f6b
         double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
         Info("\n\n\nDistanciaAngulo: " + distanciaAngulo);
         Info("\n\n\n");
