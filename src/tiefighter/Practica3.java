@@ -9,7 +9,7 @@ public class Practica3 {
         LARVABoot connection = new LARVABoot();
         
         connection.Boot("isg2.ugr.es", 1099);
-        connection.launchAgent("AMK-P3-1", Destroyer.class);
+        connection.launchAgent("AMK-P3-1", Practica3Destroyer.class);
         connection.WaitToShutDown();
        
     }
