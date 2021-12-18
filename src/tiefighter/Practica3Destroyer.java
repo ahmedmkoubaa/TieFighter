@@ -454,7 +454,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                 outbox.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
 
                 // Coordenadas aleatorias por ahora
-                int x = 10 * ncfp;
+                int x = 1 * ncfp;
                 int y = x;
 
                 outbox.setContent("" + x + " " + y);
@@ -790,19 +790,17 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         outbox = inbox.createReply();
         outbox.setPerformative(ACLMessage.REQUEST);
         outbox.setConversationId(sessionKey);
-        outbox.setReplyWith("MOVE 10 20 20");
-        outbox.setContent("MOVE 10 20 20");
+        outbox.setReplyWith("MOVE 45 20 20");
+        outbox.setContent("MOVE 45 20 20");
         this.LARVAsend(outbox);
             
         //Recibe agree del tie
         inbox = this.blockingReceive();
         Info("\n\n\n\n\n");
         Info("EL TIE SE HA MOVIDO A LA POSICION INDICADA " + inbox.getContent());
-        
         Info("\n\n\n\n\n\n\n");
         
        return Status.SOLVEPROBLEM;
-           
     }
     
     // lee sensores mediante peticiones al sensorManager, si fue lectura 

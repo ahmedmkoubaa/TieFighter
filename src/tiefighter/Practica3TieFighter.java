@@ -74,6 +74,8 @@ public class Practica3TieFighter extends LARVAFirstAgent{
     private int myZ;
     private int myAngular;
     
+    private ArrayList<String> jedisEncontrados = new ArrayList<>();
+    
     private int compass = 0;
     
     private String map;
@@ -93,8 +95,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{
                 "ENERGY",
                 "PAYLOAD",
                 "DISTANCE",
-                "ANGULAR",
-                "THERMAL",     // No
+                "ANGULAR",    // No
                 "THERMALHQ"
 
             };
@@ -301,6 +302,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{
     // el de Dagobah
     /*
     * @author Jaime
+    * @author Ahmed
     */  
     public Status MySolveProblem() {
         
@@ -325,25 +327,83 @@ public class Practica3TieFighter extends LARVAFirstAgent{
         int cont = 0;
         
         // Hasta que no barra todo el mapa
-        while(!(myDashboard.getGPS()[0] == myX && myDashboard.getGPS()[1] == myY) && cont < 100){
-            String nextAction = myTakeDecision2();
-            boolean ejecucionCorrecta = myExecuteAction(nextAction);
+        while(!(myDashboard.getGPS()[0] == myX && myDashboard.getGPS()[1] == myY) && cont < 150){
+            
+            // Modo de actuar del agente
+            String nextAction = myTakeDecision2();  // Tomo una decision
+            myExecuteAction(nextAction);            // Ejecuto la accion
+            myReadSensors();                        // Observo el entorno y repito
             
             Info("X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
             Info("Accion: " + nextAction);
             cont++;
             
-            lecturaCorrecta = myReadSensors();
+            
             
             // Despues de actualizar los sensores en la posicion actual
             // Miramos a ver el thermal y si tenemos o no un Jedi detectado
             
             int [][] thermal = myDashboard.getThermal();
+            String matrix = "";
+            boolean jediDetected = false;
+            int jediX=-1, jediY=-1;
+            double jediXReal=-1, jediYReal=-1;
+            
             Info("\n\n\n\n");
             Info("el thermal tiene length: " + thermal.length);
-            Info("\n\n\n\n");
-
+            
+            int posI, posJ;
+            posI = posJ = -1;
+            
+            for(int i=0; i< thermal.length; i++){
+                for(int j=0; j< thermal[i].length ; j++){
+                    matrix += thermal[i][j] + " ";
+                    if(thermal[i][j] == 0){
+                        jediDetected = true;
+                        // Para obtener la coordenada real del objetivo que desprendio 0
+                        // restamos 10, nuestra coordenada en el thermal. 
+                        
+                        // Si detectamos al Jedi informamos
+                        // ERROR: estamos detectando varias veces el mismo Jedi en la misma posicion
+                        jediX = j - 10; 
+                        jediY = i - 10;
+                        
+                        posI = i;
+                        posJ = j;
+                        
+                        // Sumamos ademas ahora el GPS
+                        jediXReal = jediX + myDashboard.getGPS()[0];
+                        jediYReal = jediY + myDashboard.getGPS()[1];
+                        break;
+                        
+                    }
+                }
+                matrix += "\n";
+            }
+            
+           
+            if(jediDetected){
+                String pos = 
+                        "X: " + jediXReal + ", Y: " + jediYReal;
+                
+                Info("Esta es la posicion encontrada: " + pos);
+                
+                boolean aniadido = false;
+                for(String s: jedisEncontrados){
+                    if (s.equals(pos)){
+                        aniadido = true;
+                    }
+                }
+              
+                if (!aniadido) jedisEncontrados.add(pos);
+                
+            }
         }
+        
+        // Mostrar los jedis que se han encontrado
+        jedisEncontrados.forEach(s -> {
+            Info("Hemos encontrado: " + s);
+        });
         
         return Status.CHECKOUT;
     }
@@ -398,15 +458,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{
       
         final double angular = this.myDashboard.getAngular(p);
         double miAltura = myDashboard.getGPS()[2];
-
-
-        // ------------------------------------------------------------------- //
-        /* NUEVO AHMED: 
-            si se esta evitando ir por la izquierda o la derecha
-            no se pasa a calcular la distancia de giro minima, 
-            directamente se descarta dar un giro (independientemente
-            del sentido que se este esquivando)
-        */
+        
         double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
         Info("\n\n\nDistanciaAngulo: " + distanciaAngulo);
         Info("\n\n\n");
