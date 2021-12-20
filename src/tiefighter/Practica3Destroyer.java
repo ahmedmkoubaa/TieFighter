@@ -1,6 +1,9 @@
 package tiefighter;
 
 import agents.LARVAFirstAgent;
+import com.eclipsesource.json.JsonHandler;
+import com.eclipsesource.json.JsonObject;
+import com.eclipsesource.json.JsonParser;
 import geometry.Point;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
@@ -49,7 +52,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private ArrayList<String> corellians;
     private ArrayList<String> razors;
     
-    String service = "PManager", problem = "D’Qar",
+    String service = "PManager", problem = "Ando",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
@@ -130,7 +133,9 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-        this.enableDeepLARVAMonitoring();
+        logger.offEcho();
+        
+//        this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
         mystatus = Status.CHECKIN;
         exit = false;
@@ -327,7 +332,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
        
         
         session.setPerformative(ACLMessage.REQUEST);
-        this.send(session);
+        this.LARVAsend(session);
         
         // Esperar a obtener respuesta
         session = this.LARVAblockingReceive();
@@ -381,7 +386,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             session.setContent("Request execute UP session " + sessionKey );
             
             session.setPerformative(ACLMessage.REQUEST);
-            this.send(session);
+            this.LARVAsend(session);
             
             // Esperamos a obtener resultado de la ejecucion
             session = this.LARVAblockingReceive();
@@ -402,20 +407,31 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private void getMapaDelNivel() {
         session = session.createReply();
         
+        session.setPerformative(ACLMessage.QUERY_REF);
         session.setContent("Query MAP session " + sessionKey);
         session.setConversationId(sessionKey);
-        session.setPerformative(ACLMessage.QUERY_REF);
         
-        this.send(session);
+        this.LARVAsend(session);
         
-        session = this.blockingReceive();
-        
-        Info("\n\n\n\n");
-        Info("ANTES DEL ARMAGEDON!!!!!");
-        Info("\n\n\n\n");
+        session = this.LARVAblockingReceive();
         
         mapLevel = session.getContent();
+        Alert("Mapa obtenido");
+        Info("\n\n\n\n");
+        Info("ANTES DEL ARMAGEDON!!!!!");
+        Info(mapLevel);
+        
         myReadSensors();
+
+        int altura = myDashboard.getMapLevel(1, 1);
+        Info("Este es el max level " + altura);
+        
+                
+        Info("\n\n\n\n");
+        Alert("Mapa impreso");
+        
+        
+       
         
         
         
@@ -482,7 +498,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         
         while (ncfp > 0) {
             // Esperar a que algun agente envie algo
-            inbox = this.blockingReceive();  
+            inbox = this.LARVAblockingReceive();  
             
             
             // Si es un agree, entonces 
@@ -514,7 +530,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         }
         
         while (ninf > 0) {
-            inbox = this.blockingReceive();
+            inbox = this.LARVAblockingReceive();
             Info("INFORM RECIBIDO ESPERANDO INFORMS: " + inbox.getContent() + " sender: " + inbox.getSender());
             ninf--; // Hemos recibido un info, uno menos por recibir 
         }
@@ -848,7 +864,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         // Nos basamos en una arquitectura cliente / servidor
         // Esperamos recibir una peticion y la procesaremos dando la respuesta 
         // adecuada
-        inbox = this.blockingReceive();
+        inbox = this.LARVAblockingReceive();
         
         /*
         * @author Ahmed
@@ -1083,18 +1099,18 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             return Status.SOLVEPROBLEM;
         }
     }
-    
-    // lee sensores mediante peticiones al sensorManager, si fue lectura 
+        // lee sensores mediante peticiones al sensorManager, si fue lectura 
     // correcta devuelve true, en otro caso devuelve false
     private boolean myReadSensors() {
         this.outbox = new ACLMessage();
         
         outbox.setSender(getAID());
         outbox.addReceiver(new AID(sessionManager, AID.ISLOCALNAME));
-        outbox.setContent("Query sensors session " + sessionKey);
         outbox.setPerformative(ACLMessage.QUERY_REF);
+        outbox.setContent("Query sensors session " + sessionKey);
         
         this.LARVAsend(outbox);
+        
         Info("Request query sensors session to " + sessionManager);
         
         inbox = LARVAblockingReceive();
@@ -1102,9 +1118,8 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         content = inbox.getContent();
         
         // Comprobar que la lectura fuese correcta
-        if (inbox.getPerformative() == ACLMessage.REFUSE 
+        if(inbox.getPerformative() == ACLMessage.REFUSE 
                 || inbox.getPerformative() == ACLMessage.FAILURE) {
-            Alert(content);
             return false;
         }
         

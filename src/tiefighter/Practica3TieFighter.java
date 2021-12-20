@@ -110,6 +110,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
+        logger.offEcho();
         this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
         mystatus = Status.CHECKIN;

@@ -101,6 +101,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
+        logger.offEcho();
         this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
         mystatus = Status.CHECKIN;
