@@ -34,6 +34,8 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private int posAparicionX = 0;                  // Pos en la que aparecera el destroyer en X
     private int posAparicionY = 0;                  // Pos en la que aparecera el destroyer en Y
     
+    private double alturaFighter = 245;
+    
     private String mapLevel;                        // Nivel del mapa
     
     /*
@@ -434,19 +436,127 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         }
         
         Alert("La maxima altura del suelo es: " + maxAlturaSuelo);
+    }
+        
+    /*
+    * @author Antonio
+    * @author Raúl
+    */
 
+    private void Barrido(){
         
+        ArrayList<String> RecorridoprimerCuadrante = this.getRecorridoPrimerCuadrante();
+        ArrayList<String> RecorridoSegundoCuadrante = this.getRecorridoSegundoCuadrante();
         
-        
-                
-        
-        
-       
-        
-        
-        
+        outbox = new ACLMessage();
+        outbox.setSender(getAID());     
+        outbox.addReceiver(new AID(fighters.get(0), AID.ISLOCALNAME));
+      
+        outbox.setPerformative(ACLMessage.REQUEST);
+        outbox.setContent("MOVE " + posicionesMove.get(0));
+        outbox.setReplyWith("MOVE " + posicionesMove.get(0));
+        outbox.setOntology("COMMITMENT");
+        outbox.setConversationId(sessionKey);                
+        // Realizar envio de mensaje
+        this.LARVAsend(outbox);
         
     }
+    
+
+
+/*
+    * @author Antonio
+    * @author Raul
+    */
+    
+    private ArrayList<String> getRecorridoPrimerCuadrante(){
+        
+        int x = 10, y = 10;
+        
+        int auxiliar;
+        
+        ArrayList<String> puntos = new ArrayList<>();
+        
+        while(x < width/2){
+            y = height - 10;
+            
+            puntos.add(String.valueOf(x)  + " " + String.valueOf(y) + " " + String.valueOf(alturaFighter));
+            
+            auxiliar = width/2 - x;
+            
+            if(auxiliar < 10){
+                x += auxiliar;
+            }
+            else
+                 x += 10;
+            
+            //x += 10;
+            
+            if(x >= width/2)
+                break;
+            
+            puntos.add(String.valueOf(x)  + " " + String.valueOf(y) + " " + String.valueOf(alturaFighter));
+            
+            y = 10;
+            
+            puntos.add(String.valueOf(x)  + " " + String.valueOf(y) + " " + String.valueOf(alturaFighter));
+            
+            auxiliar = width/2 - x;
+            
+            if(auxiliar < 10){
+                x += auxiliar;
+            }
+            else
+                 x += 10;
+            
+            //x += 10;
+            
+            if(x >= width/2)
+                break;
+            
+            
+            puntos.add(String.valueOf(x)  + " " + String.valueOf(y) + " " + String.valueOf(alturaFighter));
+            
+        }
+        
+        return puntos;
+        
+    }
+    
+    /*
+    * @author Antonio
+    * @author Raul
+    */
+    private ArrayList<String> getRecorridoSegundoCuadrante(){
+        
+        int x = width/2 + 10, y = 10;
+        
+        ArrayList<String> puntos = new ArrayList<>();
+        
+        while(x < width ){
+            y = height - 10;
+            
+            puntos.add(String.valueOf(x)  + " " + String.valueOf(y) + " " + String.valueOf(alturaFighter));
+            
+            x += 10;
+            
+            puntos.add(String.valueOf(x)  + " " + String.valueOf(y) + " " + String.valueOf(alturaFighter));
+            
+            y = 10;
+            
+            puntos.add(String.valueOf(x)  + " " + String.valueOf(y) + " " + String.valueOf(alturaFighter));
+            
+            x += 10;
+            
+            puntos.add(String.valueOf(x)  + " " + String.valueOf(y) + " " + String.valueOf(alturaFighter));
+            
+        }
+        
+        return puntos;
+        
+    }   
+        
+    
     
     /*
     * @author Antonio
@@ -1173,3 +1283,4 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         }        
     }
 }
+
