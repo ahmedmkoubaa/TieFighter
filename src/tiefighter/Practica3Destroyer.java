@@ -89,14 +89,15 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     /*
     * @author Ahmed
     */
-    
+    private int maxAlturaSuelo;
     private ArrayList<String> encontrados = new ArrayList<>();
     private ArrayList<String> posicionesMove = 
             new ArrayList<>(
                     List.of("45 15 0",
                             "40 40 0",
                             "10 33 0", 
-                            "24 23 0"));
+                            "24 23 0")
+            );
     
     private boolean capturando = false;
     private boolean fighterCancelado = false;
@@ -133,7 +134,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-        logger.offEcho();
+//        logger.offEcho();
         
 //        this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
@@ -360,6 +361,9 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             // Reclutar agentes para nuestro equipo
             getRecruitment();
             
+            // Desplazar agentes a posiciones y alturas predeterminadas
+            initPosicionesAgentes();
+            
             return Status.SOLVEPROBLEM;
         } else {
             Alert("Error: joining session: " + session.getContent());
@@ -416,19 +420,25 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         session = this.LARVAblockingReceive();
         
         mapLevel = session.getContent();
-        Alert("Mapa obtenido");
-        Info("\n\n\n\n");
-        Info("ANTES DEL ARMAGEDON!!!!!");
-        Info(mapLevel);
+       
         
         myReadSensors();
+        maxAlturaSuelo = 0;
+        int alturaActual = 0;
+        
+        for (int i = 0; i < width; i++) {
+            for (int j = 0; j < height; j++) {
+                alturaActual = this.myDashboard.getMapLevel(i, j);
+                if (maxAlturaSuelo < alturaActual) maxAlturaSuelo = alturaActual;
+            }
+        }
+        
+        Alert("La maxima altura del suelo es: " + maxAlturaSuelo);
 
-        int altura = myDashboard.getMapLevel(1, 1);
-        Info("Este es el max level " + altura);
+        
+        
         
                 
-        Info("\n\n\n\n");
-        Alert("Mapa impreso");
         
         
        
@@ -451,7 +461,6 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         
         // Rellenar vector de agentes con todos los posibles agentes
         for (String f: fighters)    agentes.add(f);
-        // agentes.add(fighters.get(fighters.size() - 1)); // TRAMPA
         for (String c: corellians)  agentes.add(c);
         for (String r: razors)      agentes.add(r);
         
@@ -464,16 +473,6 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         // Los receptores del mensaje seran los que obtuvimos previamente
         int ncfp=0;
         for (String s : agentes) {
-            /*
-            if (s.equals("106-WING-Tie de Antoñete") || s.equals("106-WING-Tie2")) {
-                agentes.remove(s);
-                
-            } else {
-                outbox.addReceiver(new AID(s, AID.ISLOCALNAME));
-                Info("Este agente es: " + s);
-                ncfp++; // contar receptores enviados
-            }
-            */
             outbox.addReceiver(new AID(s, AID.ISLOCALNAME));
             Info("Este agente es: " + s);
             ncfp++; // contar receptores enviados
@@ -491,15 +490,12 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         // Realizar envio de mensaje
         this.LARVAsend(outbox);
         
-        // Esperar tantas respuestas como cfp a agente se hayan enviado
-        // ncfp = 1; // TRAMPA
-        
+        // Esperar tantas respuestas como cfp a agente se hayan enviado        
         int ninf = 0;
         
         while (ncfp > 0) {
             // Esperar a que algun agente envie algo
-            inbox = this.LARVAblockingReceive();  
-            
+            inbox = this.LARVAblockingReceive();
             
             // Si es un agree, entonces 
             if (inbox.getPerformative() == ACLMessage.AGREE) {
@@ -533,14 +529,25 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             inbox = this.LARVAblockingReceive();
             Info("INFORM RECIBIDO ESPERANDO INFORMS: " + inbox.getContent() + " sender: " + inbox.getSender());
             ninf--; // Hemos recibido un info, uno menos por recibir 
-        }
+        }     
+    }
+   
+    /**
+    * @author Ahmed
+    */
+    // Metodo que desplaza a cada agente a 
+    // la posicion deseada al principio de la partida
+    private void initPosicionesAgentes() {
         
-        
-        // Hacer primer request move
+        //--------------------------------------------------------------------//
+        // TIEFIGHTERS
+        // Hacer primer request move para comenzar 
+        // a mover al tiefighter a la posicion que queremos
         outbox = new ACLMessage();
         outbox.setSender(getAID());     
         outbox.addReceiver(new AID(fighters.get(0), AID.ISLOCALNAME));
       
+        // Cambiar posicion usando barridoPrimerCuadrante y segundo
         outbox.setPerformative(ACLMessage.REQUEST);
         outbox.setContent("MOVE " + posicionesMove.get(0));
         outbox.setReplyWith("MOVE " + posicionesMove.get(0));
@@ -549,6 +556,21 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         // Realizar envio de mensaje
         this.LARVAsend(outbox);
         
+        //--------------------------------------------------------------------//
+        // CORELLIANS
+        // Mover al corellian a una posicion mas elevada
+        outbox = new ACLMessage();
+        outbox.setSender(getAID());     
+        outbox.addReceiver(new AID(corellians.get(0), AID.ISLOCALNAME));
+        
+        // Cambiar usando posiciones iniciales de corellians
+        outbox.setPerformative(ACLMessage.REQUEST);
+        outbox.setContent("MOVE " + posicionesMove.get(0));
+        outbox.setReplyWith("MOVE " + posicionesMove.get(0));
+        outbox.setOntology("COMMITMENT");
+        outbox.setConversationId(sessionKey);                
+        // Realizar envio de mensaje
+        this.LARVAsend(outbox);
     }
 
     private String myTakeDecision() {
