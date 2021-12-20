@@ -69,6 +69,8 @@ public class Practica3Corellian extends LARVAFirstAgent{
     private int initX;
     private int initY;
     
+    private double alturaCorellian;
+    
     private int myX;
     private int myY;
     private int myZ;
@@ -101,7 +103,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-        this.enableDeepLARVAMonitoring();
+        //this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
         mystatus = Status.CHECKIN;
         exit = false;
@@ -403,34 +405,48 @@ public class Practica3Corellian extends LARVAFirstAgent{
     
     /*
     * @author Jaime
+    * @author Antonio
     */  
     private String myTakeDecision2(){
-        String nextAction = "";
+         String nextAction = "";
         Point p = new Point(myX,myY);
-      
-        final double angular = this.myDashboard.getAngular(p);
-        double miAltura = myDashboard.getGPS()[2];
         
-        double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
-//        Info("\n\n\nDistanciaAngulo: " + distanciaAngulo);
-//        Info("\n\n\n");
-//        Info("\n\n\nAngular: " + angular);
-//        Info("\n\n\n");
-//        Info("\n\n\nCompass: " + compass);
-//        Info("\n\n\n");
-        if( distanciaAngulo >= 45) {
+        alturaCorellian = 245; //aqui recibe la que le diga el destroyer
+        double alturaActual = myDashboard.getGPS()[2];
+      
+        if(alturaActual == alturaCorellian){
+            final double angular = this.myDashboard.getAngular(p);
+            double miAltura = myDashboard.getGPS()[2];
 
-            // Elegir distancia de giro minimo
-            if ( distanciaAngulo < gradoTotal/2 ) {
-                 nextAction = "LEFT";
-                 compass = (compass + 45 + gradoTotal) % gradoTotal;
+            double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
+    //        Info("\n\n\nDistanciaAngulo: " + distanciaAngulo);
+    //        Info("\n\n\n");
+    //        Info("\n\n\nAngular: " + angular);
+    //        Info("\n\n\n");
+    //        Info("\n\n\nCompass: " + compass);
+    //        Info("\n\n\n");
+            if( distanciaAngulo >= 45) {
+
+                // Elegir distancia de giro minimo
+                if ( distanciaAngulo < gradoTotal/2 ) {
+                     nextAction = "LEFT";
+                     compass = (compass + 45 + gradoTotal) % gradoTotal;
+                }
+                else {
+                     nextAction = "RIGHT";
+                     compass = (compass - 45 + gradoTotal) % gradoTotal;
+                }
+            }else{
+                nextAction = "MOVE";
             }
-            else {
-                 nextAction = "RIGHT";
-                 compass = (compass - 45 + gradoTotal) % gradoTotal;
-            }
-        }else{
-            nextAction = "MOVE";
+
+            
+        }
+        else if(alturaActual < alturaCorellian){
+            nextAction = "UP";
+        }
+        else if(alturaActual > alturaCorellian){
+            nextAction = "DOWN";
         }
         
         return nextAction;
