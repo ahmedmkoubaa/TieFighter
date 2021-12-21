@@ -34,7 +34,8 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private int posAparicionX = 0;                  // Pos en la que aparecera el destroyer en X
     private int posAparicionY = 0;                  // Pos en la que aparecera el destroyer en Y
     
-    private double alturaFighter = 245;
+    private int alturaFighter = 245;                // Valor por defecto, cambiara luego
+    private int alturaCorellian = 235;              // Valor por defecto, cambiara luego
     
     private String mapLevel;                        // Nivel del mapa
     
@@ -105,6 +106,13 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private boolean fighterCancelado = false;
     private boolean corellianCancelado = false;
     
+    
+    /*
+    * @author Ahmed
+    */
+    private ArrayList<String> recorridoPrimerCuadrante;
+    private ArrayList<String> recorridoSegundoCuadrante;
+    private ArrayList<String> spawnPointsCorellians = new ArrayList<>();
 
     
     private ArrayList<double[]> casillasProhibidas = new ArrayList<>();
@@ -362,7 +370,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             
             // Reclutar agentes para nuestro equipo
             getRecruitment();
-            
+                    
             // Desplazar agentes a posiciones y alturas predeterminadas
             initPosicionesAgentes();
             
@@ -422,7 +430,6 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         session = this.LARVAblockingReceive();
         
         mapLevel = session.getContent();
-       
         
         myReadSensors();
         maxAlturaSuelo = 0;
@@ -435,40 +442,70 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             }
         }
         
-        Alert("La maxima altura del suelo es: " + maxAlturaSuelo);
+        alturaCorellian = maxAlturaSuelo;            // Corellians iran sobre la altura del suelo
+        alturaFighter = alturaCorellian + 5;         // Fighters iran justamente por encima
     }
         
     /*
     * @author Antonio
     * @author Raúl
+    * @author Ahmed
     */
-
-    private void Barrido(){
+    // Metodo que genera los recorridos necesarios que va a llevar a cabo cada agente
+    // dependeria del numero de agentes el barrido que se va a llevar a cabo
+    private void generarBarrido(){
+        recorridoPrimerCuadrante = this.getRecorridoPrimerCuadrante();
+        recorridoSegundoCuadrante = this.getRecorridoSegundoCuadrante(); 
         
-        ArrayList<String> RecorridoprimerCuadrante = this.getRecorridoPrimerCuadrante();
-        ArrayList<String> RecorridoSegundoCuadrante = this.getRecorridoSegundoCuadrante();
-        
-        outbox = new ACLMessage();
-        outbox.setSender(getAID());     
-        outbox.addReceiver(new AID(fighters.get(0), AID.ISLOCALNAME));
-      
-        outbox.setPerformative(ACLMessage.REQUEST);
-        outbox.setContent("MOVE " + posicionesMove.get(0));
-        outbox.setReplyWith("MOVE " + posicionesMove.get(0));
-        outbox.setOntology("COMMITMENT");
-        outbox.setConversationId(sessionKey);                
-        // Realizar envio de mensaje
-        this.LARVAsend(outbox);
-        
+        // generarSpawnPointsCorellian()
     }
     
-
-
+    /*
+    * @author Ahmed
+    */
+    // Genera las posiciones de despliegue de lso corellian
+    private void generarSpawnPointsCorellian() {
+        // Estamos suponiendo que siempre habran dos corellian y dos tie
+        int numCorellians = corellians.size();
+        
+        // Dividimos el mapa en tantos cuadrantes como corellian haya
+        int cuadranteHeight = height/numCorellians;
+        int cuadranteWidth = width/numCorellians;
+        
+        // Queremos que cada agente aparezca en el centro de su cuadrante
+        // para ello vamos a calcular el punto medio de este y asignarlo
+        // como coordenadas, una vez hecho se aniadiran a una lista de estas
+        int x, y, z, medio, inicio, fin;
+        for (int i = 0; i < numCorellians; i++) {
+            // Calculo de X
+            inicio = cuadranteWidth * i;
+            fin = cuadranteWidth * (i+1);
+            
+            medio = (fin + inicio) / 2;
+            x = medio;
+            
+            // Calculo de y
+            inicio = cuadranteHeight * i;
+            fin = cuadranteHeight * (i+1);
+            
+            medio = (fin + inicio) / 2;
+            y = medio;
+            
+            // Calculo de z (viene previamente calculada)
+            z = alturaCorellian;
+            
+            spawnPointsCorellians.add(x + " " + y + " " + z);
+        }
+        
+        for (String s: spawnPointsCorellians) Info(s);
+        Alert("Mostrados puntos de spawn");
+    }
 /*
     * @author Antonio
     * @author Raul
     */
-    
+    // Genera una secuencia ordenada de puntos de tal manera que
+    // al seguirla se barre el primer cuadrante del mapa en zig-zag vertical
     private ArrayList<String> getRecorridoPrimerCuadrante(){
         
         int x = 10, y = 10;
@@ -477,10 +514,25 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         
         ArrayList<String> puntos = new ArrayList<>();
         
+        // Insertar punto inicial
+        puntos.add(
+                String.valueOf(x)
+                + " " + 
+                String.valueOf(y) 
+                + " " + 
+                String.valueOf(alturaFighter)
+        );
+        
         while(x < width/2){
             y = height - 10;
             
-            puntos.add(String.valueOf(x)  + " " + String.valueOf(y) + " " + String.valueOf(alturaFighter));
+            puntos.add(
+                    String.valueOf(x)  
+                    + " " + 
+                    String.valueOf(y) 
+                    + " " + 
+                    String.valueOf(alturaFighter)
+            );
             
             auxiliar = width/2 - x;
             
@@ -495,11 +547,23 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             if(x >= width/2)
                 break;
             
-            puntos.add(String.valueOf(x)  + " " + String.valueOf(y) + " " + String.valueOf(alturaFighter));
+            puntos.add(
+                    String.valueOf(x)  
+                    + " " + 
+                    String.valueOf(y) 
+                    + " " + 
+                    String.valueOf(alturaFighter)
+            );
             
             y = 10;
             
-            puntos.add(String.valueOf(x)  + " " + String.valueOf(y) + " " + String.valueOf(alturaFighter));
+            puntos.add(
+                    String.valueOf(x)
+                    + " " + 
+                    String.valueOf(y)
+                    + " " + 
+                    String.valueOf(alturaFighter)
+            );
             
             auxiliar = width/2 - x;
             
@@ -515,7 +579,13 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                 break;
             
             
-            puntos.add(String.valueOf(x)  + " " + String.valueOf(y) + " " + String.valueOf(alturaFighter));
+            puntos.add(
+                    String.valueOf(x)  
+                    + " " + 
+                    String.valueOf(y) 
+                    + " " + 
+                    String.valueOf(alturaFighter)
+            );
             
         }
         
@@ -533,23 +603,55 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         
         ArrayList<String> puntos = new ArrayList<>();
         
+        // Insertar punto inicial
+        puntos.add(
+                String.valueOf(x)
+                + " " + 
+                String.valueOf(y) 
+                + " " + 
+                String.valueOf(alturaFighter)
+        );
+        
         while(x < width ){
             y = height - 10;
             
-            puntos.add(String.valueOf(x)  + " " + String.valueOf(y) + " " + String.valueOf(alturaFighter));
+            puntos.add(
+                    String.valueOf(x)  
+                    + " " + 
+                    String.valueOf(y) 
+                    + " " + 
+                    String.valueOf(alturaFighter)
+            );
             
             x += 10;
             
-            puntos.add(String.valueOf(x)  + " " + String.valueOf(y) + " " + String.valueOf(alturaFighter));
-            
+            puntos.add(
+                    String.valueOf(x)  
+                    + " " + 
+                    String.valueOf(y) 
+                    + " " + 
+                    String.valueOf(alturaFighter)
+            );
+           
             y = 10;
             
-            puntos.add(String.valueOf(x)  + " " + String.valueOf(y) + " " + String.valueOf(alturaFighter));
+            puntos.add(
+                    String.valueOf(x)  
+                    + " " + 
+                    String.valueOf(y) 
+                    + " " + 
+                    String.valueOf(alturaFighter)
+            );
             
             x += 10;
             
-            puntos.add(String.valueOf(x)  + " " + String.valueOf(y) + " " + String.valueOf(alturaFighter));
-            
+            puntos.add(
+                    String.valueOf(x)  
+                    + " " + 
+                    String.valueOf(y) 
+                    + " " + 
+                    String.valueOf(alturaFighter)
+            );
         }
         
         return puntos;
@@ -575,6 +677,11 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         for (String r: razors)      agentes.add(r);
         
         
+        // Genera secuencias de barrido para cada Tie y posiciones iniciales
+        generarBarrido();
+        
+        // Genera vector de puntos de despliegue en base al numero de corellians
+        generarSpawnPointsCorellian();
         
         // Vamos a enviar un nuevo mensaje
         outbox = new ACLMessage(ACLMessage.CFP);
@@ -588,8 +695,6 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             ncfp++; // contar receptores enviados
             
         }
-        
-        
         
         // Decidimos enviar mapa, lo adjuntamos como contenido
         outbox.setContent(mapLevel);
@@ -610,16 +715,44 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             // Si es un agree, entonces 
             if (inbox.getPerformative() == ACLMessage.AGREE) {
                 Info("Recibiendo AGREE y mandando ACCEPT_PROPOSAL de " + inbox.getSender());
-
-                outbox = inbox.createReply();
-                outbox.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-                outbox.setOntology("COMMITMENT");
-
+                
+                // Extraemos nombre del agente que envia
+                String sender = inbox.getSender().toString().split("\"")[1];
+                sender = sender.split("@")[0];              
+                
+                
+                
+                /*
+                * @author Ahmed
+                */
                 // Coordenadas aleatorias por ahora
                 int x = 1 + ncfp;
                 int y = x;
-
-                outbox.setContent("" + x + " " + y);
+                
+                // Coordenadas temporales, por si algun error se diese
+                String spawnPos = "" + x + " " + y;
+                
+                // Detectar que agente mando el mensaje y en base a eso
+                // desplegarlo en un punto del mundo u otro
+                int index = fighters.indexOf(sender);
+                if (index >= 0) {
+                    Info("HEMOS ENCONRTRADO UN FIGHTER");
+                    spawnPos = recorridoPrimerCuadrante.get(index);
+                    
+                } else {
+                    
+                    
+                    index = corellians.indexOf(sender);
+                    
+                    if (index >= 0) spawnPos = spawnPointsCorellians.get(index);
+                    else Error("AGENTE NO CORELLIAN O NO REGISTRADO: " + inbox.getSender());
+                }
+                
+                outbox = inbox.createReply();
+                outbox.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+                outbox.setOntology("COMMITMENT");
+                
+                outbox.setContent(spawnPos);
                 outbox.setConversationId(sessionKey);
                 outbox.setReplyWith("TAKEOFF " + password);
                 this.LARVAsend(outbox);   
@@ -649,38 +782,76 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     // la posicion deseada al principio de la partida
     private void initPosicionesAgentes() {
         
+        // VAMOS A ENVIAR MENSAJES
+        outbox = new ACLMessage();
+        outbox.setSender(getAID());
+            
         //--------------------------------------------------------------------//
         // TIEFIGHTERS
         // Hacer primer request move para comenzar 
-        // a mover al tiefighter a la posicion que queremos
-        outbox = new ACLMessage();
-        outbox.setSender(getAID());     
-        outbox.addReceiver(new AID(fighters.get(0), AID.ISLOCALNAME));
-      
-        // Cambiar posicion usando barridoPrimerCuadrante y segundo
-        outbox.setPerformative(ACLMessage.REQUEST);
-        outbox.setContent("MOVE " + posicionesMove.get(0));
-        outbox.setReplyWith("MOVE " + posicionesMove.get(0));
-        outbox.setOntology("COMMITMENT");
-        outbox.setConversationId(sessionKey);                
-        // Realizar envio de mensaje
-        this.LARVAsend(outbox);
+        // a mover al tiefighter a la posicion que queremos y 
+        // principalmente hacer que este a la altura adecuada
+        
+        // Si tenemos algun fighter
+        if (fighters.size() > 0) {
+            
+            outbox.addReceiver(new AID(fighters.get(0), AID.ISLOCALNAME));
+            
+            outbox.setPerformative(ACLMessage.REQUEST);
+            outbox.setContent("MOVE " + recorridoPrimerCuadrante.get(0));
+            outbox.setReplyWith("MOVE " + recorridoPrimerCuadrante.get(0));
+            
+            outbox.setOntology("COMMITMENT");
+            outbox.setConversationId(sessionKey);                
+            
+            // Realizar envio de mensaje
+            this.LARVAsend(outbox);
+            
+            // Si tenemos otro
+            if (fighters.size() > 1) {
+                outbox.addReceiver(new AID(fighters.get(1), AID.ISLOCALNAME));
+            
+                outbox.setPerformative(ACLMessage.REQUEST);
+                outbox.setContent("MOVE " + recorridoSegundoCuadrante.get(0));
+                outbox.setReplyWith("MOVE " + recorridoSegundoCuadrante.get(0));
+
+                outbox.setOntology("COMMITMENT");
+                outbox.setConversationId(sessionKey);                
+
+                // Realizar envio de mensaje
+                this.LARVAsend(outbox);
+            }
+        }
         
         //--------------------------------------------------------------------//
         // CORELLIANS
-        // Mover al corellian a una posicion mas elevada
-        outbox = new ACLMessage();
-        outbox.setSender(getAID());     
-        outbox.addReceiver(new AID(corellians.get(0), AID.ISLOCALNAME));
+        // Mover agente a la posicion que se le asigno previamente 
+        // teniendo en cuenta ahora x, y, z. Lo que realmente queremos 
+        // es que suba
         
-        // Cambiar usando posiciones iniciales de corellians
-        outbox.setPerformative(ACLMessage.REQUEST);
-        outbox.setContent("MOVE " + posicionesMove.get(0));
-        outbox.setReplyWith("MOVE " + posicionesMove.get(0));
-        outbox.setOntology("COMMITMENT");
-        outbox.setConversationId(sessionKey);                
-        // Realizar envio de mensaje
-        this.LARVAsend(outbox);
+        int index = 0;
+        for (String c: corellians) {
+            outbox = new ACLMessage();
+            outbox.setSender(getAID());     
+            outbox.addReceiver(new AID(c, AID.ISLOCALNAME));
+
+            // Dependiendo del corellian se le mandaran unas ubicaciones u otras
+            outbox.setPerformative(ACLMessage.REQUEST);
+            outbox.setContent("MOVE " + spawnPointsCorellians.get(index));
+            outbox.setReplyWith("MOVE " + spawnPointsCorellians.get(index));
+            
+            outbox.setOntology("COMMITMENT");
+            outbox.setConversationId(sessionKey);  
+            
+            // Realizar envio de mensaje
+            this.LARVAsend(outbox);
+            
+            // Falta hacer handling, de cuando envia un corellian un agree
+            // y un move de que se ha movido, esa es la idea.
+            
+            index++;
+        }
+        
     }
 
     private String myTakeDecision() {

@@ -199,6 +199,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         outbox.setInReplyTo("Recruit crew for session " + pass);
         outbox.setContent("");
         this.LARVAsend(outbox);
+        
         open = this.LARVAblockingReceive();
         initX = Integer.parseInt(open.getContent().split(" ")[0]);
         initY = Integer.parseInt(open.getContent().split(" ")[1]);

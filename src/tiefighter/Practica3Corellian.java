@@ -4,6 +4,7 @@ import agents.LARVAFirstAgent;
 import geometry.Point;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import java.util.ArrayList;
 import swing.LARVADash;
 
@@ -103,7 +104,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-        logger.offEcho();
+//        logger.offEcho();
         //this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
         mystatus = Status.CHECKIN;
@@ -176,6 +177,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     
     /*
     * @author Jaime
+    * @author Ahmed
     */
     public Status MyWait() {
         open = LARVAblockingReceive();
@@ -187,11 +189,13 @@ public class Practica3Corellian extends LARVAFirstAgent{
         outbox.setInReplyTo("Recruit crew for session " + pass);
         outbox.setContent("");
         this.LARVAsend(outbox);
+        
         open = this.LARVAblockingReceive();
         initX = Integer.parseInt(open.getContent().split(" ")[0]);
         initY = Integer.parseInt(open.getContent().split(" ")[1]);
         myAngular = 0;
         Info("X: " + initX + ", Y: " + initY);
+        
         return Status.COMISSIONING;
     }
 
@@ -303,63 +307,102 @@ public class Practica3Corellian extends LARVAFirstAgent{
         
         Info("Esperando peticion");
         open = this.LARVAblockingReceive();
-        if(open.getPerformative() == ACLMessage.REQUEST){
-            int nextX, nextY, nextZ;
-            myX = Integer.parseInt(open.getContent().split(" ")[1]);
-            myY = Integer.parseInt(open.getContent().split(" ")[2]);
-            myZ = Integer.parseInt(open.getContent().split(" ")[3]);
-            Info("X: " + myX + ", Y: " + myY + ", Z: " + myZ);
+        
+        
+        switch (open.getPerformative()) {
+            case ACLMessage.REQUEST:
+                int nextX, nextY, nextZ;
+                
+                String [] content = open.getContent().split(" ");
+                
+                myX = Integer.parseInt(content[1]);
+                myY = Integer.parseInt(content[2]);
+                myZ = Integer.parseInt(content[3]);
+                
+                
+                Info("X: " + myX + ", Y: " + myY + ", Z: " + myZ);
+                boolean lecturaCorrecta = myReadSensors();
+               
+                if(myDashboard.getAlive() == false){
+                    Error("CORELLIAN SIN VIDA SE MURIO");
+                    return Status.CHECKOUT;
+                }   String nextAction;
+                
+                if (content[0].toUpperCase().equals("MOVE")){
+                    // Si toca moverse confirmamos que nos vamos a mover
+                    outbox = open.createReply();
+                    outbox.setPerformative(ACLMessage.AGREE);
+                    outbox.setConversationId(sessionKey);
+                    outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
+                    outbox.setContent("");
+                    this.LARVAsend(outbox);
+                } 
+                
+                
+                int cont = 0;
+                // Hasta que no barra todo el mapa
+                while(!(myDashboard.getGPS()[0] == myX && myDashboard.getGPS()[1] == myY) && cont < 50){
+                    
+                    // Modo de actuar del agente
+                    nextAction = myTakeDecision2();  // Tomo una decision
+                    myExecuteAction(nextAction);     // Ejecuto la accion
+                    myReadSensors();                 // Observo el entorno y repito
+                    
+                    Info("X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
+                    Info("Accion: " + nextAction);
+                    cont++;
+                    
+                }   Info("POSICION FINAL: X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
+                
+                // Informar que nos hemos movido adecuadamente
+                if (content[0].toUpperCase().equals("MOVE")){
+                    // Si toca moverse nos movemos a donde se nos indique
+                    outbox = open.createReply();
 
-            boolean lecturaCorrecta = myReadSensors();
-            if(myDashboard.getAlive() == false){
-                Error("CORELLIAN SIN VIDA SE MURIO");
+                    
+                    outbox.setPerformative(ACLMessage.INFORM);
+                    outbox.setConversationId(sessionKey);
+
+                    outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
+                    outbox.setContent("MOVE" + myX + " " + myY + " " + myZ);
+                    this.LARVAsend(outbox);
+                    
+                    
+                } else if (content[0].toUpperCase().equals("CAPTURE")){
+                    // Si toca capturar hacemos lo que se debe hacer
+                    while(myDashboard.getLidar()[5][5] > 0){
+                        nextAction = "DOWN";
+                        myExecuteAction(nextAction);            // Ejecuto la accion
+                        myReadSensors();
+                    }  
+                    
+                    nextAction = "CAPTURE";
+                
+                    boolean capture = myExecuteAction(nextAction);
+                    outbox = open.createReply();
+
+                    if(capture){
+                        outbox.setPerformative(ACLMessage.INFORM);
+                    }else{
+                        outbox.setPerformative(ACLMessage.FAILURE);
+                    }   outbox.setConversationId(sessionKey);
+
+                    outbox.setInReplyTo("CAPTURE " + myX + " " + myY + " " + myZ);
+                    outbox.setContent("CAPTURE " + myX + " " + myY + " " + myZ);
+                    this.LARVAsend(outbox);
+                } else {
+                    
+                }
+                
+                
+                
+                return Status.SOLVEPROBLEM;
+                
+            case ACLMessage.CANCEL:
                 return Status.CHECKOUT;
-            }
-            String nextAction;
-            int cont = 0;
-
-            // Hasta que no barra todo el mapa
-            while(!(myDashboard.getGPS()[0] == myX && myDashboard.getGPS()[1] == myY) && cont < 50){
-
-                // Modo de actuar del agente
-                nextAction = myTakeDecision2();  // Tomo una decision
-                myExecuteAction(nextAction);            // Ejecuto la accion
-                myReadSensors();                        // Observo el entorno y repito
-
-                Info("X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
-                Info("Accion: " + nextAction);
-                cont++;
-
-            }
-
-            Info("POSICION FINAL: X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
-
-
-            while(myDashboard.getLidar()[5][5] > 0){
-                nextAction = "DOWN";
-                myExecuteAction(nextAction);            // Ejecuto la accion
-                myReadSensors();
-            }
-
-            nextAction = "CAPTURE";
-            boolean capture = myExecuteAction(nextAction);
-
-            outbox = open.createReply();
-            if(capture){
-                outbox.setPerformative(ACLMessage.INFORM);
-            }else{
-                outbox.setPerformative(ACLMessage.FAILURE);
-            }
-            outbox.setConversationId(sessionKey);
-            outbox.setInReplyTo("CAPTURE " + myX + " " + myY + " " + myZ);
-            outbox.setContent("CAPTURE " + myX + " " + myY + " " + myZ);
-            this.LARVAsend(outbox);
-            
-            return Status.SOLVEPROBLEM;
-        }else if(open.getPerformative() == ACLMessage.CANCEL){
-            return Status.CHECKOUT;
-        }else{
-            return Status.SOLVEPROBLEM;
+                
+            default:
+                return Status.SOLVEPROBLEM;
         }
     }
     
@@ -407,12 +450,13 @@ public class Practica3Corellian extends LARVAFirstAgent{
     /*
     * @author Jaime
     * @author Antonio
+    * @author Ahmed
     */  
     private String myTakeDecision2(){
-         String nextAction = "";
+        String nextAction = "";
         Point p = new Point(myX,myY);
         
-        alturaCorellian = 245; //aqui recibe la que le diga el destroyer
+        alturaCorellian = myZ; //aqui recibe la que le diga el destroyer
         double alturaActual = myDashboard.getGPS()[2];
       
         if(alturaActual == alturaCorellian){
@@ -443,11 +487,14 @@ public class Practica3Corellian extends LARVAFirstAgent{
 
             
         }
-        else if(alturaActual < alturaCorellian){
+        else {
+            // Si la altura nos coincide, calculamos si subir o bajar
+            if(alturaActual < alturaCorellian){
             nextAction = "UP";
-        }
-        else if(alturaActual > alturaCorellian){
-            nextAction = "DOWN";
+            }
+            else if(alturaActual > alturaCorellian){
+                nextAction = "DOWN";
+            }
         }
         
         return nextAction;
@@ -679,7 +726,13 @@ public class Practica3Corellian extends LARVAFirstAgent{
         this.LARVAsend(outbox);
         Info("Request query sensors session to " + sessionManager);
         
-        inbox = LARVAblockingReceive();
+        inbox = this.LARVAblockingReceive(new MessageTemplate(new MessageTemplate.MatchExpression() {
+            @Override
+            public boolean match(ACLMessage aclm) {
+                return aclm.getSender().equals(new AID(sessionManager, AID.ISLOCALNAME));
+            }
+        }));
+        
         Info(sessionManager + " says: " + inbox.getContent());
         content = inbox.getContent();
         
