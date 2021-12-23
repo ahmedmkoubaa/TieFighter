@@ -114,7 +114,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         logger.setLoggerFileName("mylog.json");
 
         logger.offEcho();
-        this.enableDeepLARVAMonitoring();
+//        this.enableDeepLARVAMonitoring();
 
         //this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");

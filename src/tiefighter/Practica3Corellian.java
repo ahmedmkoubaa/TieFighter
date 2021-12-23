@@ -105,6 +105,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
 //        logger.offEcho();
+
         //this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
         mystatus = Status.CHECKIN;
@@ -352,7 +353,9 @@ public class Practica3Corellian extends LARVAFirstAgent{
                     Info("Accion: " + nextAction);
                     cont++;
                     
-                }   Info("POSICION FINAL: X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
+                }   
+                
+                Info("POSICION FINAL: X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
                 
                 // Informar que nos hemos movido adecuadamente
                 if (content[0].toUpperCase().equals("MOVE")){
@@ -365,10 +368,12 @@ public class Practica3Corellian extends LARVAFirstAgent{
 
                     outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
                     outbox.setContent("MOVE" + myX + " " + myY + " " + myZ);
+                    
+//                    Alert("Enviando INFORM desde CORELLIAN");
                     this.LARVAsend(outbox);
                     
-                    
                 } else if (content[0].toUpperCase().equals("CAPTURE")){
+                    
                     // Si toca capturar hacemos lo que se debe hacer
                     while(myDashboard.getLidar()[5][5] > 0){
                         nextAction = "DOWN";
@@ -381,17 +386,21 @@ public class Practica3Corellian extends LARVAFirstAgent{
                     boolean capture = myExecuteAction(nextAction);
                     outbox = open.createReply();
 
+                    Alert("CAPTURANDO");
                     if(capture){
                         outbox.setPerformative(ACLMessage.INFORM);
                     }else{
                         outbox.setPerformative(ACLMessage.FAILURE);
-                    }   outbox.setConversationId(sessionKey);
-
+                    }   
+                    
+                    // Aniadir detalles al mensaje
+                    outbox.setConversationId(sessionKey);
                     outbox.setInReplyTo("CAPTURE " + myX + " " + myY + " " + myZ);
                     outbox.setContent("CAPTURE " + myX + " " + myY + " " + myZ);
+                    
                     this.LARVAsend(outbox);
                 } else {
-                    
+                    Error("NO SE RECONOCIO EL MENSAJE");
                 }
                 
                 
