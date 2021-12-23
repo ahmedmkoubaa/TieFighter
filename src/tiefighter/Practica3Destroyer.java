@@ -517,7 +517,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     // al seguirla se barre el primer cuadrante del mapa en zig-zag vertical
     private ArrayList<String> getRecorridoPrimerCuadrante(){
         
-        int x = 10, y = 10;
+         int x = 10, y = 10;
         
         int auxiliar;
         
@@ -545,7 +545,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             
             auxiliar = width/2 - x;
             
-            if(auxiliar < 10){
+            if(auxiliar < 10 && auxiliar > 5){
                 x += auxiliar;
             }
             else
@@ -553,7 +553,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             
             //x += 10;
             
-            if(x >= width/2)
+            if(x > width/2)
                 break;
             
             puntos.add(
@@ -576,7 +576,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             
             auxiliar = width/2 - x;
             
-            if(auxiliar < 10){
+            if(auxiliar < 10 && auxiliar > 5){
                 x += auxiliar;
             }
             else
@@ -584,7 +584,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             
             //x += 10;
             
-            if(x >= width/2)
+            if(x > width/2)
                 break;
             
             
@@ -607,8 +607,9 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     * @author Raul
     */
     private ArrayList<String> getRecorridoSegundoCuadrante(){
-        
         int x = width/2 + 10, y = 10;
+        
+        int auxiliar;
         
         ArrayList<String> puntos = new ArrayList<>();
         
@@ -621,7 +622,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                 String.valueOf(alturaFighter)
         );
         
-        while(x < width ){
+        while(x < width){
             y = height - 10;
             
             puntos.add(
@@ -632,7 +633,18 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                     String.valueOf(alturaFighter)
             );
             
-            x += 10;
+            auxiliar = width - x;
+            
+            if(auxiliar < 10 && auxiliar > 5){
+                x += auxiliar;
+            }
+            else
+                 x += 10;
+            
+            //x += 10;
+            
+            if(x > width)
+                break;
             
             puntos.add(
                     String.valueOf(x)  
@@ -641,18 +653,30 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                     + " " + 
                     String.valueOf(alturaFighter)
             );
-           
+            
             y = 10;
             
             puntos.add(
-                    String.valueOf(x)  
+                    String.valueOf(x)
                     + " " + 
-                    String.valueOf(y) 
+                    String.valueOf(y)
                     + " " + 
                     String.valueOf(alturaFighter)
             );
             
-            x += 10;
+            auxiliar = width - x;
+            
+            if(auxiliar < 10 && auxiliar > 5){
+                x += auxiliar;
+            }
+            else
+                 x += 10;
+            
+            //x += 10;
+            
+            if(x > width)
+                break;
+            
             
             puntos.add(
                     String.valueOf(x)  
@@ -661,10 +685,11 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                     + " " + 
                     String.valueOf(alturaFighter)
             );
+            
         }
         
         return puntos;
-        
+       
     }   
         
     
