@@ -4,6 +4,7 @@ import agents.LARVAFirstAgent;
 import geometry.Point;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import java.util.ArrayList;
 //import swing.LARVACompactDash;
 import swing.LARVADash;
@@ -64,7 +65,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     /*
     * @author Jaime
     */
-    private String pass = "106-WING";
+    private String pass = "106-WING-1";
     
     private int initX;
     private int initY;
@@ -100,7 +101,6 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                 "DISTANCE",
                 "ANGULAR",    // No
                 "THERMALHQ"
-
             };
     boolean step = true;
     
@@ -113,7 +113,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
 
-        logger.offEcho();
+//        logger.offEcho();
 //        this.enableDeepLARVAMonitoring();
 
         //this.enableDeepLARVAMonitoring();
@@ -325,6 +325,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
             Info("X: " + myX + ", Y: " + myY + ", Z: " + myZ);
 
 
+//            Alert("vamos a: " + myX + " " + myY + " " + myZ);
 
             outbox = open.createReply();
             outbox.setPerformative(ACLMessage.AGREE);
@@ -338,18 +339,22 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
             int cont = 0;
 
             // Hasta que no barra todo el mapa
-              while(!(myDashboard.getGPS()[0] == myX && myDashboard.getGPS()[1] == myY) && cont < 50){
+              while(!(myDashboard.getGPS()[0] == myX && myDashboard.getGPS()[1] == myY)){
 
                 // Modo de actuar del agente
                 String nextAction = myTakeDecision2();  // Tomo una decision
-                if(cont == 0){
-                    nextAction = "UP";
-                }
+//                if(cont == 0){
+//                    nextAction = "UP";
+//                }
+                
                 myExecuteAction(nextAction);            // Ejecuto la accion
                 myReadSensors();                        // Observo el entorno y repito
+                
                 if(myDashboard.getAlive() == false){
                     return Status.CHECKOUT;
+                
                 }
+                
                 Info("X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
                 Info("Accion: " + nextAction);
                 cont++;
@@ -501,15 +506,20 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     }
     
     
-    /*
+    /* 
     * @author Jaime
     * @author Antonio
+    * @author Ahmed
     */  
     private String myTakeDecision2(){
         String nextAction = "";
         Point p = new Point(myX,myY);
         
-        alturaTie = 245; 
+        
+        Info("COMPASS: " + compass);
+        Info("ANGULAR: " + myDashboard.getAngular(p));
+        
+        alturaTie = myZ; //aqui recibe la que le diga el destroyer
         double alturaActual = myDashboard.getGPS()[2];
       
         if(alturaActual == alturaTie){
@@ -537,18 +547,20 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
             }else{
                 nextAction = "MOVE";
             }
-
-            
         }
-        else if(alturaActual < alturaTie){
+        else {
+            // Si la altura nos coincide, calculamos si subir o bajar
+            if(alturaActual < alturaTie){
             nextAction = "UP";
-        }
-        else if(alturaActual > alturaTie){
-            nextAction = "DOWN";
+            }
+            else if(alturaActual > alturaTie){
+                nextAction = "DOWN";
+            }
         }
         
         return nextAction;
     }
+
     
     private Boolean estaCasillaProhibida(double[] posicion){
         Info("\t Casilla enfrente: X" + posicion[0] + " Y: " + posicion[1]);
@@ -635,7 +647,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         return alturaBuscada;
     }
     
-    
+  
     
     // lee sensores mediante peticiones al sensorManager, si fue lectura 
     // correcta devuelve true, en otro caso devuelve false
@@ -650,7 +662,13 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         this.LARVAsend(outbox);
         Info("Request query sensors session to " + sessionManager);
         
-        inbox = LARVAblockingReceive();
+        inbox = this.LARVAblockingReceive(new MessageTemplate(new MessageTemplate.MatchExpression() {
+            @Override
+            public boolean match(ACLMessage aclm) {
+                return aclm.getSender().equals(new AID(sessionManager, AID.ISLOCALNAME));
+            }
+        }));
+        
         Info(sessionManager + " says: " + inbox.getContent());
         content = inbox.getContent();
         

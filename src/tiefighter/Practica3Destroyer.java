@@ -30,12 +30,12 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     * @author Ahmed
     * @author Antonio
     */
-    private final String password = "106-WING";     // Alias de nuestra session
+    private final String password = "106-WING-1";     // Alias de nuestra session
     private int posAparicionX = 0;                  // Pos en la que aparecera el destroyer en X
     private int posAparicionY = 0;                  // Pos en la que aparecera el destroyer en Y
     
-    private int alturaFighter = 245;                // Valor por defecto, cambiara luego
-    private int alturaCorellian = 235;              // Valor por defecto, cambiara luego
+    private int alturaFighter;                      // Valor por defecto, cambiara luego
+    private int alturaCorellian;                    // Valor por defecto, cambiara luego
     
     private String mapLevel;                        // Nivel del mapa
     
@@ -455,7 +455,9 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     // dependeria del numero de agentes el barrido que se va a llevar a cabo
     private void generarBarrido(){
         recorridoPrimerCuadrante = this.getRecorridoPrimerCuadrante();
-        recorridoSegundoCuadrante = this.getRecorridoSegundoCuadrante(); 
+        recorridoSegundoCuadrante = this.getRecorridoSegundoCuadrante();
+        Info(recorridoPrimerCuadrante.toString());
+        Alert("Este es el recorrido generado");
         
         // generarSpawnPointsCorellian()
     }
@@ -731,7 +733,8 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                 int index = fighters.indexOf(sender);
                 if (index >= 0) {
                     Info("HEMOS ENCONRTRADO UN FIGHTER");
-                    spawnPos = recorridoPrimerCuadrante.get(index);
+                    // Dependiendo de si es 0 o 1 sera primer o segundo cuadrante
+                    spawnPos = recorridoPrimerCuadrante.get(0);
                     
                 } else {
                     index = corellians.indexOf(sender);
@@ -1225,6 +1228,8 @@ public class Practica3Destroyer extends LARVAFirstAgent{
 
                             // Realizar envio de mensaje
                             this.LARVAsend(outbox);
+//                            Alert("SE MOVERA A: " + recorridoPrimerCuadrante.get(0));
+                            
                         } else {
                             // toca hacer CANCEL PORQUE YA NO HAY MAS
                             outbox.setPerformative(ACLMessage.CANCEL);
