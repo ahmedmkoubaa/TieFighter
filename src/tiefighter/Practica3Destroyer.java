@@ -483,7 +483,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         int numCorellians = corellians.size();
         
         // Dividimos el mapa en tantos cuadrantes como corellian haya
-        int cuadranteHeight = height/numCorellians;
+        int cuadranteHeight = height;
         int cuadranteWidth = width/numCorellians;
         
         // Queremos que cada agente aparezca en el centro de su cuadrante
@@ -499,11 +499,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             x = medio;
             
             // Calculo de y
-            inicio = cuadranteHeight * i;
-            fin = cuadranteHeight * (i+1);
-            
-            medio = (fin + inicio) / 2;
-            y = medio;
+            y = height / 2;
             
             // Calculo de z (viene previamente calculada)
             z = alturaCorellian;
@@ -859,29 +855,38 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         // teniendo en cuenta ahora x, y, z. Lo que realmente queremos 
         // es que suba
         
-        int index = 0;
-        for (String c: corellians) {
-            outbox = new ACLMessage();
-            outbox.setSender(getAID());     
-            outbox.addReceiver(new AID(c, AID.ISLOCALNAME));
-
-            // Dependiendo del corellian se le mandaran unas ubicaciones u otras
+        // Si tenemos algun fighter
+        if (corellians.size() > 0) {
+            
+            outbox.addReceiver(new AID(corellians.get(0), AID.ISLOCALNAME));
+            
             outbox.setPerformative(ACLMessage.REQUEST);
-            outbox.setContent("MOVE " + spawnPointsCorellians.get(index));
-            outbox.setReplyWith("MOVE " + spawnPointsCorellians.get(index));
+            outbox.setContent("MOVE " + spawnPointsCorellians.get(0));
+            outbox.setReplyWith("MOVE " + spawnPointsCorellians.get(0));
             
             outbox.setOntology("COMMITMENT");
-            outbox.setConversationId(sessionKey);  
+            outbox.setConversationId(sessionKey);                
             
             // Realizar envio de mensaje
             this.LARVAsend(outbox);
             
-            // Falta hacer handling, de cuando envia un corellian un agree
-            // y un move de que se ha movido, esa es la idea.
+            // Si tenemos otro, le mandamos tambien 
+            // la informacion de spawn y location
+            if (corellians.size() > 1) {
+                outbox.clearAllReceiver();
+                outbox.addReceiver(new AID(corellians.get(1), AID.ISLOCALNAME));
             
-            index++;
-        }
-        
+                outbox.setPerformative(ACLMessage.REQUEST);
+                outbox.setContent("MOVE " + spawnPointsCorellians.get(1));
+                outbox.setReplyWith("MOVE " + spawnPointsCorellians.get(1));
+
+                outbox.setOntology("COMMITMENT");
+                outbox.setConversationId(sessionKey);                
+
+                // Realizar envio de mensaje
+                this.LARVAsend(outbox);
+            }
+        }        
     }
 
     private String myTakeDecision() {
@@ -1244,8 +1249,8 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                             // si nos quedan posiciones para movernos a ellas
                             // Movernos a la siguiente
                             outbox.setPerformative(ACLMessage.REQUEST);
-                            outbox.setContent("MOVE " + recorridoPrimerCuadrante.get(0));
-                            outbox.setReplyWith("MOVE " + recorridoPrimerCuadrante.get(0));
+                            outbox.setContent("MOVE " + recorrido.get(0));
+                            outbox.setReplyWith("MOVE " + recorrido.get(0));
                             outbox.setOntology("COMMITMENT");
                             outbox.setConversationId(sessionKey);   
 
