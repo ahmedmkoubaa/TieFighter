@@ -93,7 +93,17 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     * @author Ahmed
     */
     private int maxAlturaSuelo;
-    private ArrayList<String> encontrados = new ArrayList<>();
+    
+    // Cada tie tendra su lista de encontrados pertinente
+    private ArrayList<ArrayList<String>> encontrados = 
+            new ArrayList<>(
+                List.of(
+                    new ArrayList<String>(),
+                    new ArrayList<String>()
+                )
+            );
+
+    
     private ArrayList<String> posicionesMove = 
             new ArrayList<>(
                     List.of("45 15 0",
@@ -102,10 +112,10 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                             "24 23 0")
             );
     
-    private boolean corellianOcupado = true;    // verdadero hasta que no haga inform
-    private boolean fighterCancelado = false;   // Aun no cancelados
-    private boolean corellianCancelado = false; // Aun no cancelados
-    
+    private boolean [] corellianOcupado = {true, true};      // Verdadero hasta que no se haga inform
+    private boolean [] fighterCancelado = {false, false};    // Aun no cancelados
+    private boolean [] corellianCancelado = { false, false}; // Aun no cancelados
+ 
     
     /*
     * @author Ahmed
@@ -113,7 +123,8 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private ArrayList<String> recorridoPrimerCuadrante;
     private ArrayList<String> recorridoSegundoCuadrante;
     private ArrayList<String> spawnPointsCorellians = new ArrayList<>();
-
+    
+    boolean recharge, found, move, capture; // Posibles estados de una peticion
     
     private ArrayList<double[]> casillasProhibidas = new ArrayList<>();
     
@@ -144,7 +155,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-        logger.offEcho();
+//        logger.offEcho();
         
 //        this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
@@ -457,6 +468,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         recorridoPrimerCuadrante = this.getRecorridoPrimerCuadrante();
         recorridoSegundoCuadrante = this.getRecorridoSegundoCuadrante();
         Info(recorridoPrimerCuadrante.toString());
+        Info(recorridoSegundoCuadrante.toString());
         Alert("Este es el recorrido generado");
         
         // generarSpawnPointsCorellian()
@@ -498,6 +510,8 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             
             spawnPointsCorellians.add(x + " " + y + " " + z);
         }
+        
+        Alert("Spawn points de corellians: " + spawnPointsCorellians);
     }
 /*
     * @author Antonio
@@ -713,6 +727,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             
             // Si es un agree, entonces 
             if (inbox.getPerformative() == ACLMessage.AGREE) {
+                
                 Info("Recibiendo AGREE y mandando ACCEPT_PROPOSAL de " + inbox.getSender());
                 
                 // Extraemos nombre del agente que envia
@@ -733,8 +748,14 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                 int index = fighters.indexOf(sender);
                 if (index >= 0) {
                     Info("HEMOS ENCONRTRADO UN FIGHTER");
-                    // Dependiendo de si es 0 o 1 sera primer o segundo cuadrante
-                    spawnPos = recorridoPrimerCuadrante.get(0);
+                    
+                    if (index == 0){
+                        spawnPos = recorridoPrimerCuadrante.get(0);
+                    } else if (index == 1) {
+                        spawnPos = recorridoSegundoCuadrante.get(0);
+                    } else {
+                        Error("TIEFIGHTER NO ESPERADO");    
+                    }
                     
                 } else {
                     index = corellians.indexOf(sender);
@@ -754,6 +775,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                 
                 ncfp--; // Hemos recibido una respuesta a cfp, uno menos
                 ninf++; // Esperamos un nuevo inform de respuesta al accept_propsal
+                
             } else if (inbox.getPerformative() == ACLMessage.INFORM){
                 // Respuesta al accept_proposal
                 Info("INFORM RECIBIDO EN RECRUITMENT: " + inbox.getContent() + " sender: " + inbox.getSender());
@@ -813,8 +835,10 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             // Realizar envio de mensaje
             this.LARVAsend(outbox);
             
-            // Si tenemos otro
+            // Si tenemos otro, le mandamos tambien 
+            // la informacion de spawn y location
             if (fighters.size() > 1) {
+                outbox.clearAllReceiver();
                 outbox.addReceiver(new AID(fighters.get(1), AID.ISLOCALNAME));
             
                 outbox.setPerformative(ACLMessage.REQUEST);
@@ -1168,7 +1192,6 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         */
         
         String content;
-        boolean recharge, found, move, capture;
         
         // Nos basamos en una arquitectura cliente / servidor
         // Esperamos recibir una peticion y la procesaremos dando la respuesta 
@@ -1186,15 +1209,8 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                 content = inbox.getContent();
                 move = capture = false;
                 
-                for (String c: content.split(" ")) {
-                    if (c.toUpperCase().equals("MOVE")) {
-                        move = true;
-                        break;
-                    } else if (c.toUpperCase().equals("CAPTURE")){
-                        capture = true;
-                        break;
-                    }   
-                }
+                // Actualiza el tipo de inform recibido (move, capture, etc)
+                actualizarTipoInform(content);
                 
                 if (move) {
                     // Si hemos detectado un inform move
@@ -1209,15 +1225,22 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                     // Comprobamos quien es el agente que nos lo envio
                     int index = fighters.indexOf( sender );
                     if (index >= 0) {
+                        // Determinar el recorrido que se va a usar
+                        // dependiendo del tie localizado
+                        ArrayList<String> recorrido = 
+                                (index == 0) ? 
+                                recorridoPrimerCuadrante : 
+                                recorridoSegundoCuadrante;
+                        
 //                        Alert("HEMOS ENCONTRADO TIEFIGHTER: " + sender);
                         
                         // Elminamos la posicion a la que le mandamos previamente moverse
-                        recorridoPrimerCuadrante.remove(0);
+                        recorrido.remove(0);
 
                         // Creamos una respuesta
                         outbox = inbox.createReply();
 
-                        if (recorridoPrimerCuadrante.size() > 0) {
+                        if (recorrido.size() > 0) {
                             // si nos quedan posiciones para movernos a ellas
                             // Movernos a la siguiente
                             outbox.setPerformative(ACLMessage.REQUEST);
@@ -1237,35 +1260,44 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                             outbox.setConversationId(sessionKey); 
                             outbox.setContent("CANCEL CREW " + password);
 
-                            fighterCancelado = true;
+                            fighterCancelado[index] = true;
                             this.LARVAsend(outbox);
                         }
-                    }
-                    else {
+                    } else {
+                        // Vamos a buscar un corellian porque no hemos encontrado ningun tiefighter
 //                        Alert("NO HEMOS ENCONTRADO UN TIEFIGHTER, BUSCAMOS UN CORELLIAN");
                         
                         // Si no era un fighter comprobamos a ver los corellian
                         index = corellians.indexOf(sender);
                         if (index >= 0){
-                            corellianOcupado = false;
+                            corellianOcupado[index] = false;
 //                            Alert("HEMOS ENCONTRADO CORELLIAN: " + sender);
                         } else {
-                            Error("AGENTE NO RECONOCIDO");
+                            Error("CORELLIAN NO RECONOCIDO");
                         }
                     }
                   } else if (capture) {
-                     Info("HE RECIBIDO UN INFORM CAPTURE: " + inbox.getContent() + 
+                    Info("HE RECIBIDO UN INFORM CAPTURE: " + inbox.getContent() + 
                         " sender: " + inbox.getSender());
-                
+                     
+                    String sender = getSenderName(inbox.getSender());
+                    int index = corellians.indexOf(sender);
                     
-                    encontrados.remove(0);        // Eliminar el elemento que fue encontrado
-                    corellianOcupado = false;     // Marcar captura a false
+                    if (index >= 0) {
+                        encontrados.get(index).remove(0);    // Eliminar el elemento que fue encontrado
+                        corellianOcupado[index] = false;     // Marcar captura a false
+                    } else {
+                        Error("CORELLIAN NO RECONOCIDO EN INFORM CAPTURE");
+                    }
+                    
+                    
                 }
                 
                 break;
                 
             case ACLMessage.AGREE: 
-                Info("HE RECIBIDO AGREE, EL TIEFIGHTER SE VA A MOVER");
+                Info("HE RECIBIDO AGREE DE: " + getSenderName(inbox.getSender()));
+                
 //                Alert("Dentro del agree, este es el sender: " + inbox.getSender());
                 break;
                 
@@ -1330,12 +1362,17 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                     y = contentSplit[2];    // Sacamos Y
                     z = "0";
                     
-                    
-                    // Aniadimos a lista de encontrados
-                    encontrados.add(x + " " + y + " " + z);
-                    
+                    int index = fighters.indexOf(getSenderName(inbox.getSender()));
+                    if (index < 0) {
+                        Error("FIGHTER NO RECONOCIDO EN FOUND");
+                    } else {
+                        // Aniadimos a lista de encontrados
+                        encontrados.get(index).add(x + " " + y + " " + z);
                    
                     Info("HEMOS ENCONTRADO UN JEDI: " + x + " " + y + " " + z);
+                    }
+                    
+                    
                 }
                 else {
                     Error("Not understood");
@@ -1364,16 +1401,19 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         * @author Ahmed
         */
         // Si disponemos de corellians y los conocemos
-        if (corellians != null && corellians.size() > 0){
-            if (!corellianOcupado && !encontrados.isEmpty()){
-                corellianOcupado = true;
+        
+        for (int i = 0; i < corellians.size(); i++) {
+            
+            // Comprobar cada corellian y sus datos almacenados
+            if (!corellianOcupado[i] && !encontrados.get(i).isEmpty()){
+                corellianOcupado[i] = true;
                 outbox = new ACLMessage();
                 outbox.setSender(getAID());
                 outbox.addReceiver(new AID(corellians.get(0), AID.ISLOCALNAME));
 
                 outbox.setPerformative(ACLMessage.REQUEST);
-                outbox.setContent("CAPTURE " + encontrados.get(0));
-                outbox.setReplyWith("CAPTURE " + encontrados.get(0));
+                outbox.setContent("CAPTURE " + encontrados.get(i).get(0));
+                outbox.setReplyWith("CAPTURE " + encontrados.get(i).get(0));
                 outbox.setOntology("COMMITMENT");
                 outbox.setConversationId(sessionKey);
                 
@@ -1382,11 +1422,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                 // Realizar envio de mensaje
                 this.LARVAsend(outbox);
             }           
-        } else {
-            Error("No tenemos corellians, lo siento");
         }
-        
-        
         
         /*
         * @author Ahmed
@@ -1394,11 +1430,13 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         // Si ya no podemos descubrir mas jedis (cancelamos los tie)
         // entonces, en cuanto acabemos de capturar los jedis conocidos
         // cancelamos los corellian (nos aseguramos que no hay mas encontrados)
-        if (fighterCancelado && !corellianOcupado && encontrados.isEmpty()) {
+        
+        for (int i = 0; i < corellians.size(); i++){
+           if (fighterCancelado[i] && !corellianOcupado[i] && encontrados.get(i).isEmpty()) {
             outbox = new ACLMessage();
             outbox.setSender(getAID());
 
-            outbox.addReceiver(new AID(corellians.get(0), AID.ISLOCALNAME));
+            outbox.addReceiver(new AID(corellians.get(i), AID.ISLOCALNAME));
             outbox.setPerformative(ACLMessage.CANCEL);
             outbox.setOntology("COMMITMENT");
             outbox.setConversationId(sessionKey); 
@@ -1406,14 +1444,24 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             this.LARVAsend(outbox);
             
             // Marcar corellian como cancelado
-            corellianCancelado = true;
+            corellianCancelado[i] = true;
+            }
         }
+        
         
         /*
         * @author Ahmed
         */
         // Condicion de seguida o parada
-        if (fighterCancelado && corellianCancelado) {
+        
+        // Comprobar que estan todos los agentes cancelados
+        boolean todosCancelados = 
+                fighterCancelado[0] 
+                && fighterCancelado[1] 
+                && corellianCancelado[0] 
+                && corellianCancelado[1];
+        
+        if (todosCancelados) {
             // En caso de que hayamos cancelado todos los agentes, 
             // vamos a esperar a que todos esten fuera para 
             // cerar el problema abierto
@@ -1437,7 +1485,25 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             return Status.SOLVEPROBLEM;
         }
     }
-        // lee sensores mediante peticiones al sensorManager, si fue lectura 
+    
+    private void actualizarTipoInform(final String content) {
+        
+        // Falso hasta que se demuestre lo contrario
+        move = capture = false;     
+        
+        // Buscar en el contenido alguna de las palabras clave
+        for (String c: content.split(" ")) {
+            if (c.toUpperCase().equals("MOVE")) {
+                move = true;
+                break;
+            } else if (c.toUpperCase().equals("CAPTURE")){
+                capture = true;
+                break;
+            }   
+        }
+        
+    }
+    // lee sensores mediante peticiones al sensorManager, si fue lectura 
     // correcta devuelve true, en otro caso devuelve false
     private boolean myReadSensors() {
         this.outbox = new ACLMessage();
