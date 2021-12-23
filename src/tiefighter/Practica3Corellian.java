@@ -357,19 +357,21 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 
                 Info("POSICION FINAL: X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
                 
+                
                 // Informar que nos hemos movido adecuadamente
                 if (content[0].toUpperCase().equals("MOVE")){
-                    // Si toca moverse nos movemos a donde se nos indique
+                    // Crear respuesta
                     outbox = open.createReply();
-
                     
+                    // Indicar performativas e id
                     outbox.setPerformative(ACLMessage.INFORM);
                     outbox.setConversationId(sessionKey);
-
-                    outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
-                    outbox.setContent("MOVE" + myX + " " + myY + " " + myZ);
                     
-//                    Alert("Enviando INFORM desde CORELLIAN");
+                    // Contenido
+                    outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
+                    outbox.setContent("MOVE " + myX + " " + myY + " " + myZ);
+                    
+                    // Enviar
                     this.LARVAsend(outbox);
                     
                 } else if (content[0].toUpperCase().equals("CAPTURE")){
@@ -386,7 +388,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
                     boolean capture = myExecuteAction(nextAction);
                     outbox = open.createReply();
 
-                    Alert("CAPTURANDO");
+//                    Alert("CAPTURANDO");
                     if(capture){
                         outbox.setPerformative(ACLMessage.INFORM);
                     }else{

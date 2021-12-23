@@ -775,8 +775,6 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private String getSenderName(final AID sender) {
         // Extraemos nombre del agente que envia
         String res = sender.getName().split("@")[0];
-        
-        Alert("nombre es: " + res);
         return res;
     }
    
@@ -1203,6 +1201,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                     // Obtenemos nombre del origen
                     String sender = getSenderName(inbox.getSender());
                     
+//                    Alert("SENDER ES: " + sender);
                     
                     // Comprobamos quien es el agente que nos lo envio
                     int index = fighters.indexOf( sender );
@@ -1210,17 +1209,17 @@ public class Practica3Destroyer extends LARVAFirstAgent{
 //                        Alert("HEMOS ENCONTRADO TIEFIGHTER: " + sender);
                         
                         // Elminamos la posicion a la que le mandamos previamente moverse
-                        posicionesMove.remove(0);
+                        recorridoPrimerCuadrante.remove(0);
 
                         // Creamos una respuesta
                         outbox = inbox.createReply();
 
-                        if (posicionesMove.size() > 0) {
+                        if (recorridoPrimerCuadrante.size() > 0) {
                             // si nos quedan posiciones para movernos a ellas
                             // Movernos a la siguiente
                             outbox.setPerformative(ACLMessage.REQUEST);
-                            outbox.setContent("MOVE " + posicionesMove.get(0));
-                            outbox.setReplyWith("MOVE " + posicionesMove.get(0));
+                            outbox.setContent("MOVE " + recorridoPrimerCuadrante.get(0));
+                            outbox.setReplyWith("MOVE " + recorridoPrimerCuadrante.get(0));
                             outbox.setOntology("COMMITMENT");
                             outbox.setConversationId(sessionKey);   
 
@@ -1373,7 +1372,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                 outbox.setOntology("COMMITMENT");
                 outbox.setConversationId(sessionKey);
                 
-                Alert("CORELLIAN ENVIADO A CAPTURAR");
+//                Alert("CORELLIAN ENVIADO A CAPTURAR");
 
                 // Realizar envio de mensaje
                 this.LARVAsend(outbox);
