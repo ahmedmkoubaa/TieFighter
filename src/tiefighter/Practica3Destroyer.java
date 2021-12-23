@@ -34,6 +34,9 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private int posAparicionX = 0;                  // Pos en la que aparecera el destroyer en X
     private int posAparicionY = 0;                  // Pos en la que aparecera el destroyer en Y
     
+    
+    private int anchoSensor = 10;
+    private int movimientoX = anchoSensor * 2;
     private int alturaFighter;                      // Valor por defecto, cambiara luego
     private int alturaCorellian;                    // Valor por defecto, cambiara luego
     
@@ -532,8 +535,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     // Genera una secuencia ordenada de puntos de tal manera que
     // al seguirla se barre el primer cuadrante del mapa en zig-zag vertical
     private ArrayList<String> getRecorridoPrimerCuadrante(){
-        
-         int x = 10, y = 10;
+        int x = anchoSensor, y = anchoSensor;
         
         int auxiliar;
         
@@ -549,7 +551,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         );
         
         while(x < width/2){
-            y = height - 10;
+            y = height - anchoSensor;
             
             puntos.add(
                     String.valueOf(x)  
@@ -561,13 +563,11 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             
             auxiliar = width/2 - x;
             
-            if(auxiliar < 10 && auxiliar > 5){
-                x += auxiliar;
+            if(auxiliar < movimientoX && auxiliar > anchoSensor){
+                x += auxiliar - anchoSensor;
             }
             else
-                 x += 10;
-            
-            //x += 10;
+                 x += movimientoX;
             
             if(x > width/2)
                 break;
@@ -580,7 +580,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                     String.valueOf(alturaFighter)
             );
             
-            y = 10;
+            y = anchoSensor;
             
             puntos.add(
                     String.valueOf(x)
@@ -592,17 +592,14 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             
             auxiliar = width/2 - x;
             
-            if(auxiliar < 10 && auxiliar > 5){
-                x += auxiliar;
+            if(auxiliar < movimientoX && auxiliar > anchoSensor){
+                x += auxiliar - anchoSensor;
             }
             else
-                 x += 10;
-            
-            //x += 10;
+                 x += movimientoX;
             
             if(x > width/2)
                 break;
-            
             
             puntos.add(
                     String.valueOf(x)  
@@ -623,7 +620,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     * @author Raul
     */
     private ArrayList<String> getRecorridoSegundoCuadrante(){
-        int x = width/2 + 10, y = 10;
+        int x = width/2 + anchoSensor, y = anchoSensor;
         
         int auxiliar;
         
@@ -639,7 +636,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         );
         
         while(x < width){
-            y = height - 10;
+            y = height - anchoSensor;
             
             puntos.add(
                     String.valueOf(x)  
@@ -651,13 +648,11 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             
             auxiliar = width - x;
             
-            if(auxiliar < 10 && auxiliar > 5){
-                x += auxiliar;
+            if(auxiliar < movimientoX && auxiliar > anchoSensor){
+                x += auxiliar - anchoSensor;
             }
             else
-                 x += 10;
-            
-            //x += 10;
+                 x += movimientoX;
             
             if(x > width)
                 break;
@@ -670,7 +665,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                     String.valueOf(alturaFighter)
             );
             
-            y = 10;
+            y = anchoSensor;
             
             puntos.add(
                     String.valueOf(x)
@@ -682,13 +677,11 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             
             auxiliar = width - x;
             
-            if(auxiliar < 10 && auxiliar > 5){
-                x += auxiliar;
+            if(auxiliar < movimientoX && auxiliar > anchoSensor){
+                x += auxiliar - anchoSensor;
             }
             else
-                 x += 10;
-            
-            //x += 10;
+                 x += movimientoX;
             
             if(x > width)
                 break;
@@ -706,7 +699,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         
         return puntos;
        
-    }   
+    }     
         
     
     

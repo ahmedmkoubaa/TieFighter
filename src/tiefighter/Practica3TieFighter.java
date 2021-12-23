@@ -313,20 +313,18 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     * @author Ahmed
     */  
     public Status MySolveProblem() {
-        
+
         int nextX, nextY, nextZ;
         // Recibiendo posicion a la que ir (MOVE X Y Z)
         open = this.LARVAblockingReceive();
-        
-        if(open.getPerformative() == ACLMessage.REQUEST){
+
+        if (open.getPerformative() == ACLMessage.REQUEST) {
             myX = Integer.parseInt(open.getContent().split(" ")[1]);
             myY = Integer.parseInt(open.getContent().split(" ")[2]);
             myZ = Integer.parseInt(open.getContent().split(" ")[3]);
             Info("X: " + myX + ", Y: " + myY + ", Z: " + myZ);
 
-
 //            Alert("vamos a: " + myX + " " + myY + " " + myZ);
-
             outbox = open.createReply();
             outbox.setPerformative(ACLMessage.AGREE);
             outbox.setConversationId(sessionKey);
@@ -334,59 +332,116 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
             outbox.setContent("");
             this.LARVAsend(outbox);
 
-
-            boolean lecturaCorrecta = myReadSensors();
+            //boolean lecturaCorrecta = myReadSensors();
+            myReadSensors();
             int cont = 0;
+               
+            String matrix = "";
+            boolean jediDetected = false;
+            int jediX = -1, jediY = -1;
+            int posI, posJ;
+            posI = posJ = -1;
+            double jediXReal = -1, jediYReal = -1;
+            int[][] thermal = myDashboard.getThermal();
+            int pi = (int) (myDashboard.getGPS()[0]);
+            int pj = (int) (myDashboard.getGPS()[1]);
+
+            if (thermal[pi][pj] == 0) {
+                jediDetected = true;
+                jediX = pj - 10;
+                jediY = pi - 10;
+
+                posI = pi;
+                posJ = pj;
+
+                // Sumamos ademas ahora el GPS
+                jediXReal = jediX + myDashboard.getGPS()[0];
+                jediYReal = jediY + myDashboard.getGPS()[1];
+            }
+
+            if (jediDetected) {
+                String pos
+                        = "X: " + jediXReal + ", Y: " + jediYReal;
+
+                Info("Esta es la posicion encontrada: " + pos);
+
+                boolean aniadido = false;
+                for (String s : jedisEncontrados) {
+                    if (s.equals(pos)) {
+                        aniadido = true;
+                    }
+                }
+
+                if (!aniadido) {
+                    jedisEncontrados.add(pos);
+                    /*
+                    @author Antonio
+                    @author Ahmed
+                    Enviamos mensaje al destroyer con los jedi encontrados
+                     */
+
+                    //Cambiamos la forma en la que se inserta la pos del jedi,
+                    //para utilizar split() y así obtenemos la x e y.
+                    outbox = open.createReply();
+                    outbox.setPerformative(ACLMessage.INFORM_REF);
+                    outbox.setConversationId(sessionKey);
+                    outbox.setOntology("COMMITMENT");
+                    outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
+                    outbox.setContent("FOUND " + (int) jediXReal + " " + (int) jediYReal);
+                    this.LARVAsend(outbox);
+
+                }
+
+            }
+
 
             // Hasta que no barra todo el mapa
-            while(!(myDashboard.getGPS()[0] == myX && myDashboard.getGPS()[1] == myY)){
+            while (!(myDashboard.getGPS()[0] == myX && myDashboard.getGPS()[1] == myY)) {
 
                 // Modo de actuar del agente
                 String nextAction = myTakeDecision2();  // Tomo una decision
 //                if(cont == 0){
 //                    nextAction = "UP";
 //                }
-                
+
                 myExecuteAction(nextAction);            // Ejecuto la accion
                 myReadSensors();                        // Observo el entorno y repito
-                
-                if(myDashboard.getAlive() == false){
+
+                if (myDashboard.getAlive() == false) {
                     return Status.CHECKOUT;
-                
+
                 }
-                
+
                 Info("X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
                 Info("Accion: " + nextAction);
                 cont++;
 
-
-
                 // Despues de actualizar los sensores en la posicion actual
                 // Miramos a ver el thermal y si tenemos o no un Jedi detectado
-
-                int [][] thermal = myDashboard.getThermal();
-                String matrix = "";
-                boolean jediDetected = false;
-                int jediX=-1, jediY=-1;
-                double jediXReal=-1, jediYReal=-1;
+                thermal = myDashboard.getThermal();
+                matrix = "";
+                jediDetected = false;
+                jediX = -1;
+                jediY = -1;
+                jediXReal = -1;
+                jediYReal = -1;
 
                 Info("\n\n\n\n");
                 Info("el thermal tiene length: " + thermal.length);
 
-                int posI, posJ;
                 posI = posJ = -1;
 
-                for(int i=0; i< thermal.length; i++){
-                    for(int j=0; j< thermal[i].length ; j++){
+                for (int i = 0; i < thermal.length; i++) {
+                    for (int j = 0; j < thermal[i].length; j++) {
                         matrix += thermal[i][j] + " ";
-                        if(thermal[i][j] == 0){
+                        if (thermal[i][j] == 0) {
                             jediDetected = true;
                             // Para obtener la coordenada real del objetivo que desprendio 0
                             // restamos 10, nuestra coordenada en el thermal. 
 
                             // Si detectamos al Jedi informamos
                             // ERROR: estamos detectando varias veces el mismo Jedi en la misma posicion
-                            jediX = j - 10; 
+                            jediX = j - 10;
                             jediY = i - 10;
 
                             posI = i;
@@ -402,50 +457,47 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                     matrix += "\n";
                 }
 
-
-                if(jediDetected){
-                    String pos = 
-                            "X: " + jediXReal + ", Y: " + jediYReal;
+                if (jediDetected) {
+                    String pos
+                            = "X: " + jediXReal + ", Y: " + jediYReal;
 
                     Info("Esta es la posicion encontrada: " + pos);
 
                     boolean aniadido = false;
-                    for(String s: jedisEncontrados){
-                        if (s.equals(pos)){
+                    for (String s : jedisEncontrados) {
+                        if (s.equals(pos)) {
                             aniadido = true;
                         }
                     }
 
-                    if (!aniadido){
+                    if (!aniadido) {
                         jedisEncontrados.add(pos);
                         /*
                         @author Antonio
                         @author Ahmed
                         Enviamos mensaje al destroyer con los jedi encontrados
-                        */
+                         */
 
                         //Cambiamos la forma en la que se inserta la pos del jedi,
                         //para utilizar split() y así obtenemos la x e y.
-
                         outbox = open.createReply();
                         outbox.setPerformative(ACLMessage.INFORM_REF);
                         outbox.setConversationId(sessionKey);
                         outbox.setOntology("COMMITMENT");
                         outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
-                        outbox.setContent("FOUND " + (int)jediXReal + " " + (int)jediYReal);
+                        outbox.setContent("FOUND " + (int) jediXReal + " " + (int) jediYReal);
                         this.LARVAsend(outbox);
 
                     }
 
-                } 
+                }
 
-            }  
+            }
 
             /*
             @author Antonio
             Informamos al destroyer que hemos llegado a las coordenadas que mandó
-            */
-
+             */
             outbox = open.createReply();
             outbox.setPerformative(ACLMessage.INFORM);
             outbox.setConversationId(sessionKey);
@@ -457,11 +509,11 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
             jedisEncontrados.forEach(s -> {
                 Info("Hemos encontrado: " + s);
             });
-            
+
             return Status.SOLVEPROBLEM;
-        }else if(open.getPerformative() == ACLMessage.CANCEL){
+        } else if (open.getPerformative() == ACLMessage.CANCEL) {
             return Status.CHECKOUT;
-        }else{
+        } else {
             return Status.SOLVEPROBLEM;
         }
     }

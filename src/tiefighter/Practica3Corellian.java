@@ -545,7 +545,6 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 
                 final double angular = this.myDashboard.getAngular(p);
                 double miAltura = myDashboard.getGPS()[2];
-
                 double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
         //        Info("\n\n\nDistanciaAngulo: " + distanciaAngulo);
         //        Info("\n\n\n");
@@ -554,7 +553,6 @@ public class Practica3Corellian extends LARVAFirstAgent{
         //        Info("\n\n\nCompass: " + compass);
         //        Info("\n\n\n");
                 if( distanciaAngulo >= 45) {
-
                     // Elegir distancia de giro minim
                     if ( distanciaAngulo < gradoTotal/2 ) {
                          nextAction = "LEFT";
