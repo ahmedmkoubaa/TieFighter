@@ -90,15 +90,15 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     String[] contentTokens,
             mySensors = new String[] {
                 "ALIVE",
-                "ONTARGET",   // No 
+//                "ONTARGET",   // No 
                 "GPS",        // No
-                "COMPASS",
+//                "COMPASS",
                 "LIDAR",
-                "ALTITUDE",   // No
-                "VISUAL",     // No
-                "ENERGY",
-                "PAYLOAD",
-                "DISTANCE",
+//                "ALTITUDE",   // No
+//                "VISUAL",     // No
+//                "ENERGY",
+//                "PAYLOAD",
+//                "DISTANCE",
                 "ANGULAR",    // No
                 "THERMALHQ"
             };

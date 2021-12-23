@@ -70,7 +70,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     private int initX;
     private int initY;
     
-    private double alturaCorellian;
+    private double alturaCorellian = -1;
     
     private int myX;
     private int myY;
@@ -104,7 +104,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-//        logger.offEcho();
+        logger.offEcho();
 
         //this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
@@ -319,6 +319,9 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 myY = Integer.parseInt(content[2]);
                 myZ = Integer.parseInt(content[3]);
                 
+                // La primera vez que obtengamos Z nos la guardamos
+                if (alturaCorellian < 0) alturaCorellian = myZ; 
+                
                 
                 Info("X: " + myX + ", Y: " + myY + ", Z: " + myZ);
                 boolean lecturaCorrecta = myReadSensors();
@@ -326,7 +329,9 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 if(myDashboard.getAlive() == false){
                     Error("CORELLIAN SIN VIDA SE MURIO");
                     return Status.CHECKOUT;
-                }   String nextAction;
+                }   
+                
+                String nextAction;
                 
                 if (content[0].toUpperCase().equals("MOVE")){
                     // Si toca moverse confirmamos que nos vamos a mover
@@ -342,18 +347,20 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 
                 
                 int cont = 0;
+                
                 // Hasta que no barra todo el mapa
                 while(!(myDashboard.getGPS()[0] == myX &&   // X
-                        myDashboard.getGPS()[1] == myY &&   // Y
-                        myDashboard.getGPS()[2] == myZ)){   // Z
+                        myDashboard.getGPS()[1] == myY )){   // Z
                     
                     // Modo de actuar del agente
                     nextAction = myTakeDecision2();  // Tomo una decision
-                    myExecuteAction(nextAction);     // Ejecuto la accion
-                    myReadSensors();                 // Observo el entorno y repito
                     
-                    Info("X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
-                    Info("Accion: " + nextAction);
+                    // Ejecuto la accion
+                    if (!myExecuteAction(nextAction)) return Status.CHECKOUT;
+                    
+                    // Observo el entorno y repito
+                    if (!myReadSensors()) return Status.CHECKOUT;
+                    
                     cont++;   
                 }
                 
@@ -377,8 +384,6 @@ public class Practica3Corellian extends LARVAFirstAgent{
                     this.LARVAsend(outbox);
                     
                 } else if (content[0].toUpperCase().equals("CAPTURE")){
-                    
-                    
                     
                     // Si toca capturar hacemos lo que se debe hacer
                     while(myDashboard.getLidar()[5][5] > 0){
@@ -469,48 +474,109 @@ public class Practica3Corellian extends LARVAFirstAgent{
         String nextAction = "";
         Point p = new Point(myX,myY);
         
-        
-        Info("COMPASS: " + compass);
-        Info("ANGULAR: " + myDashboard.getAngular(p));
-        
-        alturaCorellian = myZ; //aqui recibe la que le diga el destroyer
         double alturaActual = myDashboard.getGPS()[2];
+        
+        
+            // Si estoy a una altura elevada sigo
+            // Si no estoy sobre el objetivo me desplazo
+            if ( myX != myDashboard.getGPS()[0] || myY != myDashboard.getGPS()[1]){
+                
+                final double angular = this.myDashboard.getAngular(p);
+
+                double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
       
-        if(alturaActual == alturaCorellian){
-            final double angular = this.myDashboard.getAngular(p);
-            double miAltura = myDashboard.getGPS()[2];
+                if( distanciaAngulo >= 45) {
 
-            double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
-    //        Info("\n\n\nDistanciaAngulo: " + distanciaAngulo);
-    //        Info("\n\n\n");
-    //        Info("\n\n\nAngular: " + angular);
-    //        Info("\n\n\n");
-    //        Info("\n\n\nCompass: " + compass);
-    //        Info("\n\n\n");
-            if( distanciaAngulo >= 45) {
+                    // Elegir distancia de giro minimo
+                    if ( distanciaAngulo < gradoTotal/2 ) {
+                         nextAction = "LEFT";
+                         compass = (compass + 45 + gradoTotal) % gradoTotal;
+                    }
+                    else {
+                         nextAction = "RIGHT";
+                         compass = (compass - 45 + gradoTotal) % gradoTotal;
+                    }
+                } else{
+                    nextAction = "MOVE";
+                    
+                    double [] gps = {myX, myY, myZ};
+                    double [] res = casillaEnfrente(compass, gps);
+                    int alturaEnFrente = myDashboard.getMapLevel((int)res[0], (int)res[1]);
+                    
+                    // Map level no funciona, siempre devuelve 0 al parecer, no tiene sentido
+                    // Porque si que le hemos pasado el mapa la verdad
+                    alturaEnFrente = mapearAlturaSegunAngulo(compass, myDashboard.getLidar());
+                    
+                    
 
-                // Elegir distancia de giro minimo
-                if ( distanciaAngulo < gradoTotal/2 ) {
-                     nextAction = "LEFT";
-                     compass = (compass + 45 + gradoTotal) % gradoTotal;
+                    // Para no estrellarnos al frente
+                    // No ha hecho falta comprobar que estemos 
+                    // encima porque se comprobo en el if
+                    if (alturaEnFrente < 0) {
+                        nextAction = "UP";
+                        
+                        Info("TENGO QUE SUBIR");
+                    }
                 }
-                else {
-                     nextAction = "RIGHT";
-                     compass = (compass - 45 + gradoTotal) % gradoTotal;
-                }
-            }else{
-                nextAction = "MOVE";
-            }
-        }
-        else {
-            // Si la altura nos coincide, calculamos si subir o bajar
-            if(alturaActual < alturaCorellian){
-            nextAction = "UP";
-            }
-            else if(alturaActual > alturaCorellian){
+                    
+            } else {
                 nextAction = "DOWN";
             }
-        }
+        
+        /*// Si estoy a baja altura y no estoy sobre el objetivo
+        // entonces subire para estar a maxima altura
+        if (alturaActual < alturaCorellian && 
+               
+          (!(
+                myDashboard.getGPS()[0] == myX 
+                && myDashboard.getGPS()[1] == myY
+            )  
+            
+                || 
+                
+                alturaCorellian == myZ
+           ) ) {
+             nextAction = "UP";
+        } else {
+            
+            // Si estoy a una altura elevada sigo
+            // Si no estoy sobre el objetivo me desplazo
+            if ( myX != myDashboard.getGPS()[0] || myY != myDashboard.getGPS()[1]){
+                
+                final double angular = this.myDashboard.getAngular(p);
+                double miAltura = myDashboard.getGPS()[2];
+
+                double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
+        //        Info("\n\n\nDistanciaAngulo: " + distanciaAngulo);
+        //        Info("\n\n\n");
+        //        Info("\n\n\nAngular: " + angular);
+        //        Info("\n\n\n");
+        //        Info("\n\n\nCompass: " + compass);
+        //        Info("\n\n\n");
+                if( distanciaAngulo >= 45) {
+
+                    // Elegir distancia de giro minim
+                    if ( distanciaAngulo < gradoTotal/2 ) {
+                         nextAction = "LEFT";
+                         compass = (compass + 45 + gradoTotal) % gradoTotal;
+                    }
+                    else {
+                         nextAction = "RIGHT";
+                         compass = (compass - 45 + gradoTotal) % gradoTotal;
+                    }
+                }else{
+                    nextAction = "MOVE";
+                }
+                    
+            }
+            // Estoy sobre el objetivo y estoy muy alto
+            else {
+                // Bajo a capturar mi objetivo
+                nextAction = "DOWN";
+            }
+        }*/
+      
+       
         
         return nextAction;
     }
