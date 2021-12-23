@@ -64,7 +64,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     /*
     * @author Jaime
     */
-    private String pass = "106-WING-1";
+    private String pass = "106-WING-2";
     private String type = "Corellian";
     
     private int initX;
@@ -309,7 +309,6 @@ public class Practica3Corellian extends LARVAFirstAgent{
         Info("Esperando peticion");
         open = this.LARVAblockingReceive();
         
-        
         switch (open.getPerformative()) {
             case ACLMessage.REQUEST:
                 int nextX, nextY, nextZ;
@@ -337,12 +336,16 @@ public class Practica3Corellian extends LARVAFirstAgent{
                     outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
                     outbox.setContent("");
                     this.LARVAsend(outbox);
-                } 
+                } else {
+//                    Alert("ME MANDAN CAPTURAR");
+                }
                 
                 
                 int cont = 0;
                 // Hasta que no barra todo el mapa
-                while(!(myDashboard.getGPS()[0] == myX && myDashboard.getGPS()[1] == myY) && cont < 50){
+                while(!(myDashboard.getGPS()[0] == myX &&   // X
+                        myDashboard.getGPS()[1] == myY &&   // Y
+                        myDashboard.getGPS()[2] == myZ)){   // Z
                     
                     // Modo de actuar del agente
                     nextAction = myTakeDecision2();  // Tomo una decision
@@ -351,9 +354,8 @@ public class Practica3Corellian extends LARVAFirstAgent{
                     
                     Info("X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
                     Info("Accion: " + nextAction);
-                    cont++;
-                    
-                }   
+                    cont++;   
+                }
                 
                 Info("POSICION FINAL: X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
                 
@@ -375,6 +377,8 @@ public class Practica3Corellian extends LARVAFirstAgent{
                     this.LARVAsend(outbox);
                     
                 } else if (content[0].toUpperCase().equals("CAPTURE")){
+                    
+                    
                     
                     // Si toca capturar hacemos lo que se debe hacer
                     while(myDashboard.getLidar()[5][5] > 0){
@@ -405,14 +409,13 @@ public class Practica3Corellian extends LARVAFirstAgent{
                     Error("NO SE RECONOCIO EL MENSAJE");
                 }
                 
-                
-                
                 return Status.SOLVEPROBLEM;
                 
             case ACLMessage.CANCEL:
                 return Status.CHECKOUT;
                 
             default:
+                Error("MENSAJE NO RECONOCIDO O ESPERADO: " + open);
                 return Status.SOLVEPROBLEM;
         }
     }
@@ -457,7 +460,6 @@ public class Practica3Corellian extends LARVAFirstAgent{
         }
     }
     
-    
     /*
     * @author Jaime
     * @author Antonio
@@ -466,6 +468,10 @@ public class Practica3Corellian extends LARVAFirstAgent{
     private String myTakeDecision2(){
         String nextAction = "";
         Point p = new Point(myX,myY);
+        
+        
+        Info("COMPASS: " + compass);
+        Info("ANGULAR: " + myDashboard.getAngular(p));
         
         alturaCorellian = myZ; //aqui recibe la que le diga el destroyer
         double alturaActual = myDashboard.getGPS()[2];
@@ -495,8 +501,6 @@ public class Practica3Corellian extends LARVAFirstAgent{
             }else{
                 nextAction = "MOVE";
             }
-
-            
         }
         else {
             // Si la altura nos coincide, calculamos si subir o bajar

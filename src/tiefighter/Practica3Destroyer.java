@@ -30,7 +30,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     * @author Ahmed
     * @author Antonio
     */
-    private final String password = "106-WING-1";     // Alias de nuestra session
+    private final String password = "106-WING-2";     // Alias de nuestra session
     private int posAparicionX = 0;                  // Pos en la que aparecera el destroyer en X
     private int posAparicionY = 0;                  // Pos en la que aparecera el destroyer en Y
     
@@ -55,7 +55,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private ArrayList<String> corellians;
     private ArrayList<String> razors;
     
-    String service = "PManager", problem = "Ando",
+    String service = "PManager", problem = "Bogano",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
@@ -102,7 +102,6 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                     new ArrayList<String>()
                 )
             );
-
     
     private ArrayList<String> posicionesMove = 
             new ArrayList<>(
@@ -155,7 +154,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-//        logger.offEcho();
+        logger.offEcho();
         
 //        this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
@@ -469,7 +468,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         recorridoSegundoCuadrante = this.getRecorridoSegundoCuadrante();
         Info(recorridoPrimerCuadrante.toString());
         Info(recorridoSegundoCuadrante.toString());
-        Alert("Este es el recorrido generado");
+//        Alert("Este es el recorrido generado");
         
         // generarSpawnPointsCorellian()
     }
@@ -479,35 +478,52 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     */
     // Genera las posiciones de despliegue de lso corellian
     private void generarSpawnPointsCorellian() {
-        // Estamos suponiendo que siempre habran dos corellian y dos tie
-        int numCorellians = corellians.size();
+        int x, y, z;
         
-        // Dividimos el mapa en tantos cuadrantes como corellian haya
-        int cuadranteHeight = height;
-        int cuadranteWidth = width/numCorellians;
+        // Primer cuadrante o corellian
+        x = Integer.parseInt(recorridoPrimerCuadrante.get(0).split(" ")[0]) + 1;
+        y = Integer.parseInt(recorridoPrimerCuadrante.get(0).split(" ")[1]) + 1;
+        z = alturaCorellian;
+        
+        spawnPointsCorellians.add(x + " " + y + " " + z);
+        
+        // Segundo cuadrante o corellian
+        // Primer cuadrante o corellian
+        x = Integer.parseInt(recorridoSegundoCuadrante.get(0).split(" ")[0]) + 1;
+        y = Integer.parseInt(recorridoSegundoCuadrante.get(0).split(" ")[1]) + 1;
+        z = alturaCorellian;
+        
+        spawnPointsCorellians.add(x + " " + y + " " + z);
+        
+        // Estamos suponiendo que siempre habran dos corellian y dos tie
+//        int numCorellians = corellians.size();
+//        
+//        // Dividimos el mapa en tantos cuadrantes como corellian haya
+//        int cuadranteHeight = height;
+//        int cuadranteWidth = width/numCorellians;
         
         // Queremos que cada agente aparezca en el centro de su cuadrante
         // para ello vamos a calcular el punto medio de este y asignarlo
         // como coordenadas, una vez hecho se aniadiran a una lista de estas
-        int x, y, z, medio, inicio, fin;
-        for (int i = 0; i < numCorellians; i++) {
-            // Calculo de X
-            inicio = cuadranteWidth * i;
-            fin = cuadranteWidth * (i+1);
-            
-            medio = (fin + inicio) / 2;
-            x = medio;
-            
-            // Calculo de y
-            y = height / 2;
-            
-            // Calculo de z (viene previamente calculada)
-            z = alturaCorellian;
-            
-            spawnPointsCorellians.add(x + " " + y + " " + z);
-        }
+//        int x, y, z, medio, inicio, fin;
+//        for (int i = 0; i < numCorellians; i++) {
+//            // Calculo de X
+//            inicio = cuadranteWidth * i;
+//            fin = cuadranteWidth * (i+1);
+//            
+//            medio = (fin + inicio) / 2;
+//            x = medio;
+//            
+//            // Calculo de y
+//            y = height / 2;
+//            
+//            // Calculo de z (viene previamente calculada)
+//            z = alturaCorellian;
+//            
+//            spawnPointsCorellians.add(x + " " + y + " " + z);
+//        }
         
-        Alert("Spawn points de corellians: " + spawnPointsCorellians);
+//        Alert("Spawn points de corellians: " + spawnPointsCorellians);
     }
 /*
     * @author Antonio
@@ -882,7 +898,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         
         // Si tenemos algun fighter
         if (corellians.size() > 0) {
-            
+            outbox.clearAllReceiver();
             outbox.addReceiver(new AID(corellians.get(0), AID.ISLOCALNAME));
             
             outbox.setPerformative(ACLMessage.REQUEST);
@@ -1390,19 +1406,22 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                     String x, y, z;
                     x = contentSplit[1];    // Sacamos X
                     y = contentSplit[2];    // Sacamos Y
-                    z = "0";
+                    z = "" + myDashboard.getMapLevel(
+                            Integer.parseInt(x), 
+                            Integer.parseInt(y)
+                    );
                     
-                    int index = fighters.indexOf(getSenderName(inbox.getSender()));
+                    int index = fighters.indexOf(
+                            getSenderName(inbox.getSender())
+                    );
+                    
                     if (index < 0) {
                         Error("FIGHTER NO RECONOCIDO EN FOUND");
                     } else {
                         // Aniadimos a lista de encontrados
-                        encontrados.get(index).add(x + " " + y + " " + z);
-                   
-                    Info("HEMOS ENCONTRADO UN JEDI: " + x + " " + y + " " + z);
+                        encontrados.get(index).add(x + " " + y + " " + z);                        
+                        Info("HEMOS ENCONTRADO UN JEDI: " + x + " " + y + " " + z);
                     }
-                    
-                    
                 }
                 else {
                     Error("Not understood");
@@ -1434,12 +1453,14 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         
         for (int i = 0; i < corellians.size(); i++) {
             
+            
             // Comprobar cada corellian y sus datos almacenados
             if (!corellianOcupado[i] && !encontrados.get(i).isEmpty()){
+                
                 corellianOcupado[i] = true;
                 outbox = new ACLMessage();
                 outbox.setSender(getAID());
-                outbox.addReceiver(new AID(corellians.get(0), AID.ISLOCALNAME));
+                outbox.addReceiver(new AID(corellians.get(i), AID.ISLOCALNAME));
 
                 outbox.setPerformative(ACLMessage.REQUEST);
                 outbox.setContent("CAPTURE " + encontrados.get(i).get(0));
@@ -1451,7 +1472,9 @@ public class Practica3Destroyer extends LARVAFirstAgent{
 
                 // Realizar envio de mensaje
                 this.LARVAsend(outbox);
-            }           
+            }   
+            
+            
         }
         
         /*
@@ -1462,19 +1485,19 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         // cancelamos los corellian (nos aseguramos que no hay mas encontrados)
         
         for (int i = 0; i < corellians.size(); i++){
-           if (fighterCancelado[i] && !corellianOcupado[i] && encontrados.get(i).isEmpty()) {
-            outbox = new ACLMessage();
-            outbox.setSender(getAID());
+            if (fighterCancelado[i] && !corellianOcupado[i] && encontrados.get(i).isEmpty()) {
+                outbox = new ACLMessage();
+                outbox.setSender(getAID());
 
-            outbox.addReceiver(new AID(corellians.get(i), AID.ISLOCALNAME));
-            outbox.setPerformative(ACLMessage.CANCEL);
-            outbox.setOntology("COMMITMENT");
-            outbox.setConversationId(sessionKey); 
-            outbox.setContent("CANCEL CREW " + password);
-            this.LARVAsend(outbox);
-            
-            // Marcar corellian como cancelado
-            corellianCancelado[i] = true;
+                outbox.addReceiver(new AID(corellians.get(i), AID.ISLOCALNAME));
+                outbox.setPerformative(ACLMessage.CANCEL);
+                outbox.setOntology("COMMITMENT");
+                outbox.setConversationId(sessionKey); 
+                outbox.setContent("CANCEL CREW " + password);
+                this.LARVAsend(outbox);
+
+                // Marcar corellian como cancelado
+                corellianCancelado[i] = true;
             }
         }
         

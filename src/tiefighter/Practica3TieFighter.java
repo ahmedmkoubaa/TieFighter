@@ -65,7 +65,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     /*
     * @author Jaime
     */
-    private String pass = "106-WING-1";
+    private String pass = "106-WING-2";
     
     private int initX;
     private int initY;
@@ -113,7 +113,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
 
-//        logger.offEcho();
+        logger.offEcho();
 //        this.enableDeepLARVAMonitoring();
 
         //this.enableDeepLARVAMonitoring();
@@ -339,7 +339,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
             int cont = 0;
 
             // Hasta que no barra todo el mapa
-              while(!(myDashboard.getGPS()[0] == myX && myDashboard.getGPS()[1] == myY)){
+            while(!(myDashboard.getGPS()[0] == myX && myDashboard.getGPS()[1] == myY)){
 
                 // Modo de actuar del agente
                 String nextAction = myTakeDecision2();  // Tomo una decision
