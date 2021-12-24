@@ -469,6 +469,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private void generarBarrido(){
         recorridoPrimerCuadrante = this.getRecorridoPrimerCuadrante();
         recorridoSegundoCuadrante = this.getRecorridoSegundoCuadrante();
+        
         Info(recorridoPrimerCuadrante.toString());
         Info(recorridoSegundoCuadrante.toString());
 //        Alert("Este es el recorrido generado");
@@ -1240,6 +1241,9 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         /*
         * @author Ahmed
         */
+        
+        int index = -1;
+        
         switch(inbox.getPerformative()){
             case ACLMessage.INFORM:
                 // Recibimos informacion y procesamos contenido para hallar de que
@@ -1262,7 +1266,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
 //                    Alert("SENDER ES: " + sender);
                     
                     // Comprobamos quien es el agente que nos lo envio
-                    int index = fighters.indexOf( sender );
+                    index = fighters.indexOf( sender );
                     if (index >= 0) {
                         // Determinar el recorrido que se va a usar
                         // dependiendo del tie localizado
@@ -1320,7 +1324,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                         " sender: " + inbox.getSender());
                      
                     String sender = getSenderName(inbox.getSender());
-                    int index = corellians.indexOf(sender);
+                    index = corellians.indexOf(sender);
                     
                     if (index >= 0) {
                         encontrados.get(index).remove(0);    // Eliminar el elemento que fue encontrado
@@ -1343,6 +1347,39 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             case ACLMessage.FAILURE: 
                 Info("HE RECIBIDO UN FAILURE DE CAPTURE");
                 Alert("RECIBIDO FAILURE: " + inbox.getContent());
+                
+                String agenteFallido = null;
+                
+                index = corellians.indexOf(getSenderName(inbox.getSender()));
+                if (index >= 0) {
+                    corellianCancelado[index] = true;
+                    corellianOcupado[index] = true;   
+                    agenteFallido = corellians.get(index);
+                    
+                } else {
+                    index = fighters.indexOf(getSenderName(inbox.getSender()));
+                    if (index >= 0) {
+                        fighterCancelado[index] = true;
+                        agenteFallido = fighters.get(index);
+                    } 
+                }
+                
+                // Cancelar agente si es que lo hemos detectado
+                if (agenteFallido != null) {
+                    outbox = new ACLMessage();
+                    outbox.setSender(getAID());
+
+                    outbox.addReceiver(new AID(agenteFallido, AID.ISLOCALNAME));
+                    outbox.setPerformative(ACLMessage.CANCEL);
+                    outbox.setOntology("COMMITMENT");
+                    outbox.setConversationId(sessionKey); 
+                    outbox.setContent("CANCEL CREW " + password);
+                    this.LARVAsend(outbox);
+                }
+                else {
+                    Error("RECIBIDO FAILURE DE AGENTE NO RECONOCIDO: " + inbox.getSender());
+                }
+                
                 break;
                 
             case ACLMessage.QUERY_IF: 
@@ -1404,7 +1441,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                             Integer.parseInt(y)
                     );
                     
-                    int index = fighters.indexOf(
+                    index = fighters.indexOf(
                             getSenderName(inbox.getSender())
                     );
                     
