@@ -15,6 +15,8 @@ import swing.LARVADash;
 
 public class Practica3Corellian extends LARVAFirstAgent{
 
+    
+
 
     enum Status {
         CHECKIN, CHECKOUT, 
@@ -41,15 +43,16 @@ public class Practica3Corellian extends LARVAFirstAgent{
     private int sigAction = 0;
     private final int gradoTotal = 360;
    
-    private double maxEnergy = -1;
-    private final double porcentajeLimite = 0.4;
+    
+    private final double porcentajeLimite = 0.2;
     private final double porcentajeCercania = 0.8;
     private final int alturaCercania = 20;
     
     // Atributos en los que se almacenaran los valores
     // correspondientes a umbrales de recarga
-    private double umbralLimiteRecarga;
-    private double umbralCercaniaRecarga;
+    private double maxEnergy = 3500;
+    private double umbralLimiteRecarga = porcentajeLimite * maxEnergy;
+    private double umbralCercaniaRecarga; 
     
     // indica que estamos evitando lo que se encuentre a nuestra izquierda
     private Boolean evitandoIzquierda = false;
@@ -77,10 +80,14 @@ public class Practica3Corellian extends LARVAFirstAgent{
     private int myZ;
     private int myAngular;
     
+    /*
+    * @author Ahmed
+    */
+    private boolean recargando = false;
     private ArrayList<String> jedisEncontrados = new ArrayList<>();
     
     private int compass = 0;
-    
+    private boolean recargaPedida = false;
     private String map;
     
     int width, height, maxFlight;
@@ -88,7 +95,8 @@ public class Practica3Corellian extends LARVAFirstAgent{
     ACLMessage open, session;
     String[] contentTokens,
             mySensors = new String[] {
-                "ALIVE",  
+//                "ALIVE", 
+                "ENERGY",
                 "GPS",     
                 "LIDAR",
 //                "DISTANCE",
@@ -104,7 +112,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-        logger.offEcho();
+//        logger.offEcho();
 
         //this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
@@ -326,7 +334,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 Info("X: " + myX + ", Y: " + myY + ", Z: " + myZ);
                 boolean lecturaCorrecta = myReadSensors();
                
-                if(myDashboard.getAlive() == false){
+                if(myDashboard.getEnergy() == 0){
                     Error("CORELLIAN SIN VIDA SE MURIO");
                     return Status.CHECKOUT;
                 }   
@@ -336,10 +344,13 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 if (content[0].toUpperCase().equals("MOVE")){
                     // Si toca moverse confirmamos que nos vamos a mover
                     outbox = open.createReply();
+                    
                     outbox.setPerformative(ACLMessage.AGREE);
+                    
                     outbox.setConversationId(sessionKey);
                     outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
                     outbox.setContent("");
+                    
                     this.LARVAsend(outbox);
                 } else {
 //                    Alert("ME MANDAN CAPTURAR");
@@ -353,18 +364,22 @@ public class Practica3Corellian extends LARVAFirstAgent{
                         myDashboard.getGPS()[1] == myY )){   // Z
                     
                     // Modo de actuar del agente
-                    nextAction = myTakeDecision2();  // Tomo una decision
+                    nextAction = myTakeDecision2();
+                    
+                    Info("\n\n\n\n\n\n");
+                    Info("NIVEL DE VIDA ES: " + myDashboard.getEnergy());
+                    Info("LIMITE ES: " +  umbralLimiteRecarga);
+                    Info("\n\n\n\n\n\n");
+                    
                     
                     // Ejecuto la accion
                     if (!myExecuteAction(nextAction)) return Status.CHECKOUT;
                     
                     // Observo el entorno y repito
                     if (!myReadSensors()) return Status.CHECKOUT;
-                    
-                    cont++;   
                 }
                 
-                Info("POSICION FINAL: X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
+                // Info("POSICION FINAL: X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
                 
                 
                 // Informar que nos hemos movido adecuadamente
@@ -466,6 +481,41 @@ public class Practica3Corellian extends LARVAFirstAgent{
     }
     
     /*
+    *@author Ahmed
+    */
+    // Pide recarga al destroyer y espera la respuesta
+    // actualiza ademas el estado pertinente
+    private void pedirRecarga(){
+        //------------------------------------------------
+        // Crear respuesta
+        outbox = open.createReply();
+        
+        // Indicar performativas e id
+        outbox.setPerformative(ACLMessage.QUERY_IF);
+        outbox.setConversationId(sessionKey);
+            
+        // Contenido
+        outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
+        outbox.setContent("RECHARGE");
+        outbox.setOntology("COMMITMENT");
+        recargaPedida = true;
+                    
+        // Enviar
+        this.LARVAsend(outbox);
+        
+        
+        // Esperar a recibir respuesta 
+        open = this.LARVAblockingReceive();
+        if (open.getPerformative() == ACLMessage.CONFIRM) {
+            recargando = true;
+            
+            Info("NOS HAN CONCEDIDO LA RECARGA");
+        } else {
+            recargando = false;
+        }
+    }
+    
+    /*
     * @author Jaime
     * @author Antonio
     * @author Ahmed
@@ -474,54 +524,79 @@ public class Practica3Corellian extends LARVAFirstAgent{
         String nextAction = "";
         Point p = new Point(myX,myY);
         
-        double alturaActual = myDashboard.getGPS()[2];
+        if (!recargaPedida && myDashboard.getEnergy() < umbralLimiteRecarga) {
+            pedirRecarga();
+        }
         
+        // Si estamos recargando
+        if (recargando) {
+            
+            Info("/n/n/n/n");
+            Info("ESTAMOS YENDO A RECARGAR");
+            Info("/n/n/n/n");
+            
+            // Bajamos al suelo para ejecutar la accion de recarga
+            if (myDashboard.getLidar()[5][5] > 0) {
+                nextAction = "DOWN";
+                
+            } else if (myDashboard.getLidar()[5][5] == 0) {
+                nextAction = "RECHARGE";
+                recargando = false;
+                recargaPedida = false;
+            }
+        } else {
+            // si no estamos recargando, seguimos yendo al objetivo
+            
+            double alturaActual = myDashboard.getGPS()[2];
         
             // Si estoy a una altura elevada sigo
             // Si no estoy sobre el objetivo me desplazo
             if ( myX != myDashboard.getGPS()[0] || myY != myDashboard.getGPS()[1]){
-                
+
                 final double angular = this.myDashboard.getAngular(p);
 
                 double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
-      
+
                 if( distanciaAngulo >= 45) {
 
                     // Elegir distancia de giro minimo
                     if ( distanciaAngulo < gradoTotal/2 ) {
-                         nextAction = "LEFT";
-                         compass = (compass + 45 + gradoTotal) % gradoTotal;
+                        nextAction = "LEFT";
+                        compass = (compass + 45 + gradoTotal) % gradoTotal;
                     }
                     else {
-                         nextAction = "RIGHT";
-                         compass = (compass - 45 + gradoTotal) % gradoTotal;
+                        nextAction = "RIGHT";
+                        compass = (compass - 45 + gradoTotal) % gradoTotal;
                     }
-                } else{
+                } 
+                else {
+                    // Nos movemos pues estamos alineados con el objetivo
                     nextAction = "MOVE";
-                    
-                    double [] gps = {myX, myY, myZ};
-                    double [] res = casillaEnfrente(compass, gps);
-                    int alturaEnFrente = myDashboard.getMapLevel((int)res[0], (int)res[1]);
-                    
+
+//                    double [] gps = {myX, myY, myZ};
+//                    double [] res = casillaEnfrente(compass, gps);
+//                    int alturaEnFrente = myDashboard.getMapLevel((int)res[0], (int)res[1]);
+
                     // Map level no funciona, siempre devuelve 0 al parecer, no tiene sentido
                     // Porque si que le hemos pasado el mapa la verdad
-                    alturaEnFrente = mapearAlturaSegunAngulo(compass, myDashboard.getLidar());
-                    
-                    
+                    int alturaEnFrente = mapearAlturaSegunAngulo(compass, myDashboard.getLidar());
+
+
 
                     // Para no estrellarnos al frente
                     // No ha hecho falta comprobar que estemos 
                     // encima porque se comprobo en el if
                     if (alturaEnFrente < 0) {
                         nextAction = "UP";
-                        
                         Info("TENGO QUE SUBIR");
                     }
                 }
-                    
             } else {
                 nextAction = "DOWN";
             }
+        }
+        
+       
         
         /*// Si estoy a baja altura y no estoy sobre el objetivo
         // entonces subire para estar a maxima altura

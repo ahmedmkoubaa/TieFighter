@@ -95,14 +95,14 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     ACLMessage open, session;
     String[] contentTokens,
             mySensors = new String[] {
-                "ALIVE",
+//                "ALIVE",
 //                "ONTARGET",   // No 
                 "GPS",        // No
 //                "COMPASS",
                 "LIDAR",
 //                "ALTITUDE",   // No
 //                "VISUAL",     // No
-//                "ENERGY",
+                "ENERGY",
 //                "PAYLOAD",
 //                "DISTANCE",
                 "ANGULAR",    // No
@@ -526,10 +526,8 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                     // Observo el entorno y repito
                     if (!myReadSensors()) return Status.CHECKOUT;
                     
-                    if (myDashboard.getAlive() == false) {
-                        return Status.CHECKOUT;
-                        
-                    }
+                    // Si no tenemos energia tambien nos detenemos
+                    if (myDashboard.getEnergy() == 0) return Status.CHECKOUT;
 
 //                Info("X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
 //                Info("Accion: " + nextAction);
@@ -656,7 +654,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         else {
             // Si la altura nos coincide, calculamos si subir o bajar
             if(alturaActual < alturaTie){
-            nextAction = "UP";
+                nextAction = "UP";
             }
             else if(alturaActual > alturaTie){
                 nextAction = "DOWN";

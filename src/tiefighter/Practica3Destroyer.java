@@ -1396,6 +1396,23 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                         break;
                 }
                 
+                // Si el mensaje era del tipo recarga
+                if (recharge) {
+                    
+                    // Falta implementar la estrategia de recarga, 
+                    // a quien le doy cada cosa y cuando
+                    
+                    outbox = inbox.createReply();
+                    outbox.setPerformative(ACLMessage.CONFIRM);
+                    outbox.setConversationId(sessionKey);
+                    outbox.setReplyWith("CONFIRM RECHARGE");
+                    outbox.setContent("CONFIRM RECHARGE");
+
+                    this.LARVAsend(outbox);
+                    
+                    Info("HEMOS DADO RECARGA A " + inbox.getSender());
+                }
+                
                 // if (recharge) { hacer lo siguiente... }
                 // else { envio not understood ... }
                 
@@ -1404,13 +1421,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                 // Buscar en vector de reclutados a este agente
                 // decidir si se la damos o no
                 
-                outbox = inbox.createReply();
-                outbox.setPerformative(ACLMessage.CONFIRM);
-                outbox.setConversationId(sessionKey);
-                outbox.setReplyWith("CONFIRM RECHARGE");
-                outbox.setContent("CONFIRM RECHARGE");
                 
-                this.LARVAsend(outbox);
                 break;
                 
             case ACLMessage.INFORM_REF:
