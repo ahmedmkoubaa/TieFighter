@@ -30,7 +30,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     * @author Ahmed
     * @author Antonio
     */
-    private final String password = "106-WING-4";     // Alias de nuestra session
+    private final String password = "106-WING-4";   // Alias de nuestra session
     private int posAparicionX = 0;                  // Pos en la que aparecera el destroyer en X
     private int posAparicionY = 0;                  // Pos en la que aparecera el destroyer en Y
     
@@ -126,7 +126,16 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private ArrayList<String> recorridoSegundoCuadrante;
     private ArrayList<String> spawnPointsCorellians = new ArrayList<>();
     
-    boolean recharge, found, move, capture; // Posibles estados de una peticion
+    private boolean recharge, found, move, capture; // Posibles estados de una peticion
+    
+    /*
+    * @author Ahmed
+    */
+    // Para control de recargas
+    private int recargasDisponibles = 5;
+    private int recargasRestantesFighters = 2;
+    private int recargasRestantesCorellians = 3;
+    
     
     private ArrayList<double[]> casillasProhibidas = new ArrayList<>();
     
@@ -1215,6 +1224,58 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         return alturaBuscada;
     }
     
+    /*
+    * @author Ahmed
+    */
+    // Cundo se recibe un mensaje de peticion de recarga
+    // se ejecuta este metodo. Identifica el emisor del mensaje
+    // y comprueba si tiene recargas disponibles o no.
+    // Si las tiene se las concede y actualiza el estado interno del
+    // control de recargas, en otro caso las deniega
+    private void procesarSolicitudRecarga(){
+        int index = -1;
+        // Crear respuesta y comprobar estado de recargas 
+        // para discernir el resultado contenido
+        outbox = inbox.createReply();
+        outbox.setConversationId(sessionKey);
+                    
+        // Llevar a cabo control de recarga
+        if (recargasDisponibles > 0) {
+            index = fighters.indexOf(getSenderName(inbox.getSender()));
+            if (index >= 0) {
+                // Es un tieFighter, vamos a gestionar sus recargas
+                
+                // Comprobar recargas restantes 
+                if (recargasRestantesFighters > 0) {
+                    outbox.setPerformative(ACLMessage.CONFIRM);
+                    recargasRestantesFighters--;
+                } else {
+                    outbox.setPerformative(ACLMessage.DISCONFIRM);
+                }
+            } else {
+                index = corellians.indexOf(getSenderName(inbox.getSender()));
+                if (index >= 0) {
+                    // Es un corellian, vamos a gestionar sus recargas
+                    // Comprobar recargas restantes 
+                    if (recargasRestantesCorellians > 0) {
+                        outbox.setPerformative(ACLMessage.CONFIRM);
+                        recargasRestantesCorellians--;
+                    } else {
+                        outbox.setPerformative(ACLMessage.DISCONFIRM);
+                                    
+                        /*  // Posible mejora, si un fighter asociado que fue
+                            // cancelado, entonces nos quedamos con su recarga
+                            if (fighterCancelado[index] && recargasRestantesFighters > 0){
+                                outbox.setPerformative(ACLMessage.CONFIRM);
+                                recargasRestantesFighters--;
+                            }
+                        */
+                    }
+                }
+            }
+        }
+    }
+    
     
     /*
     * @author Ahmed 
@@ -1399,16 +1460,13 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                 // Si el mensaje era del tipo recarga
                 if (recharge) {
                     
-                    // Falta implementar la estrategia de recarga, 
-                    // a quien le doy cada cosa y cuando
+                    procesarSolicitudRecarga();
                     
-                    outbox = inbox.createReply();
-                    outbox.setPerformative(ACLMessage.CONFIRM);
-                    outbox.setConversationId(sessionKey);
-                    outbox.setReplyWith("CONFIRM RECHARGE");
-                    outbox.setContent("CONFIRM RECHARGE");
+                    
+                    
 
                     this.LARVAsend(outbox);
+                    
                     
                     Info("HEMOS DADO RECARGA A " + inbox.getSender());
                 }
