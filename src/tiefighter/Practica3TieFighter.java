@@ -42,15 +42,15 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     private int sigAction = 0;
     private final int gradoTotal = 360;
    
-    private double maxEnergy = -1;
-    private final double porcentajeLimite = 0.4;
+    private final double porcentajeLimite = 0.10;
     private final double porcentajeCercania = 0.8;
     private final int alturaCercania = 20;
     
     // Atributos en los que se almacenaran los valores
     // correspondientes a umbrales de recarga
-    private double umbralLimiteRecarga;
-    private double umbralCercaniaRecarga;
+    private double maxEnergy = 3500;
+    private double umbralLimiteRecarga = porcentajeLimite * maxEnergy;
+    private double umbralCercaniaRecarga; 
     
     // indica que estamos evitando lo que se encuentre a nuestra izquierda
     private Boolean evitandoIzquierda = false;
@@ -65,7 +65,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     /*
     * @author Jaime
     */
-    private String pass = "106-WING-4";
+    private String pass = "106-WING-6";
     
     private int initX;
     private int initY;
@@ -89,6 +89,8 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     private String map;
     
     private double alturaTie;
+    private boolean recargando = false;
+    private boolean recargaPedida = false;
     
     int width, height, maxFlight;
     
@@ -528,6 +530,11 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                     
                     // Si no tenemos energia tambien nos detenemos
                     if (myDashboard.getEnergy() == 0) return Status.CHECKOUT;
+                    
+                    Info("\n\n\n\n\n\n");
+                    Info("NIVEL DE VIDA ES: " + myDashboard.getEnergy());
+                    Info("LIMITE ES: " +  umbralLimiteRecarga);
+                    Info("\n\n\n\n\n\n");
 
 //                Info("X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
 //                Info("Accion: " + nextAction);
@@ -607,6 +614,36 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                 break;
         }
     }
+
+    private void pedirRecarga(){
+        //------------------------------------------------
+        // Crear respuesta
+        outbox = open.createReply();
+        
+        // Indicar performativas e id
+        outbox.setPerformative(ACLMessage.QUERY_IF);
+        outbox.setConversationId(sessionKey);
+            
+        // Contenido
+        outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
+        outbox.setContent("RECHARGE");
+        outbox.setOntology("COMMITMENT");
+        recargaPedida = true;
+                    
+        // Enviar
+        this.LARVAsend(outbox);
+        
+        
+        // Esperar a recibir respuesta 
+        open = this.LARVAblockingReceive();
+        if (open.getPerformative() == ACLMessage.CONFIRM) {
+            recargando = true;
+            
+            Alert("NOS HAN CONCEDIDO LA RECARGA");
+        } else {
+            recargando = false;
+        }
+    }
     
     
     /* 
@@ -617,48 +654,66 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     private String myTakeDecision2(){
         String nextAction = "";
         Point p = new Point(myX,myY);
-        
-        
-        Info("COMPASS: " + compass);
-        Info("ANGULAR: " + myDashboard.getAngular(p));
-        
-        alturaTie = myZ; //aqui recibe la que le diga el destroyer
-        double alturaActual = myDashboard.getGPS()[2];
-      
-        if(alturaActual == alturaTie){
-            final double angular = this.myDashboard.getAngular(p);
-            double miAltura = myDashboard.getGPS()[2];
 
-            double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
-    //        Info("\n\n\nDistanciaAngulo: " + distanciaAngulo);
-    //        Info("\n\n\n");
-    //        Info("\n\n\nAngular: " + angular);
-    //        Info("\n\n\n");
-    //        Info("\n\n\nCompass: " + compass);
-    //        Info("\n\n\n");
-            if( distanciaAngulo >= 45) {
-
-                // Elegir distancia de giro minimo
-                if ( distanciaAngulo < gradoTotal/2 ) {
-                     nextAction = "LEFT";
-                     compass = (compass + 45 + gradoTotal) % gradoTotal;
-                }
-                else {
-                     nextAction = "RIGHT";
-                     compass = (compass - 45 + gradoTotal) % gradoTotal;
-                }
-            }else{
-                nextAction = "MOVE";
-            }
+        if (!recargaPedida && myDashboard.getEnergy() < umbralLimiteRecarga) {
+            pedirRecarga();
         }
-        else {
-            // Si la altura nos coincide, calculamos si subir o bajar
-            if(alturaActual < alturaTie){
-                nextAction = "UP";
-            }
-            else if(alturaActual > alturaTie){
+
+        if (recargando) {
+            
+            Info("/n/n/n/n");
+            Info("ESTAMOS YENDO A RECARGAR");
+            Info("/n/n/n/n");
+            
+            // Bajamos al suelo para ejecutar la accion de recarga
+            if (myDashboard.getLidar()[5][5] > 0) {
                 nextAction = "DOWN";
+                
+            } else if (myDashboard.getLidar()[5][5] == 0) {
+                nextAction = "RECHARGE";
+                recargando = false;
+                recargaPedida = false;
             }
+        }else{
+            
+            alturaTie = myZ; //aqui recibe la que le diga el destroyer
+            double alturaActual = myDashboard.getGPS()[2];
+        
+            if(alturaActual == alturaTie){
+                final double angular = this.myDashboard.getAngular(p);
+                double miAltura = myDashboard.getGPS()[2];
+
+                double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
+        //        Info("\n\n\nDistanciaAngulo: " + distanciaAngulo);
+        //        Info("\n\n\n");
+        //        Info("\n\n\nAngular: " + angular);
+        //        Info("\n\n\n");
+        //        Info("\n\n\nCompass: " + compass);
+        //        Info("\n\n\n");
+                if( distanciaAngulo >= 45) {
+
+                    // Elegir distancia de giro minimo
+                    if ( distanciaAngulo < gradoTotal/2 ) {
+                        nextAction = "LEFT";
+                        compass = (compass + 45 + gradoTotal) % gradoTotal;
+                    }
+                    else {
+                        nextAction = "RIGHT";
+                        compass = (compass - 45 + gradoTotal) % gradoTotal;
+                    }
+                }else{
+                    nextAction = "MOVE";
+                }
+            }
+            else {
+                // Si la altura nos coincide, calculamos si subir o bajar
+                if(alturaActual < alturaTie){
+                    nextAction = "UP";
+                }
+                else if(alturaActual > alturaTie){
+                    nextAction = "DOWN";
+                }
+            } 
         }
         
         return nextAction;

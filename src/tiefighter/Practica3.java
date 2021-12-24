@@ -11,18 +11,13 @@ public class Practica3 {
         
         connection.Boot("isg2.ugr.es", 1099);
         
-        connection.launchAgent("106-CORELLIAN-4", Practica3Corellian.class);
+        connection.launchAgent("106-CORELLIAN-8", Practica3Corellian.class);
+        connection.launchAgent("106-CORELLIAN-9", Practica3Corellian.class);        
         
+        connection.launchAgent("106-TIEFIGHTER-8", Practica3TieFighter.class);
+        connection.launchAgent("106-TIEFIGHTER-9", Practica3TieFighter.class);
         
-        connection.launchAgent("106-CORELLIAN-5", Practica3Corellian.class);
-        
-        
-        connection.launchAgent("106-TIEFIGHTER-4", Practica3TieFighter.class);
-        
-        
-        connection.launchAgent("106-TIEFIGHTER-5", Practica3TieFighter.class);
-                
-        connection.launchAgent("106-DESTROYER-4", Practica3Destroyer.class);
+        connection.launchAgent("106-DESTROYER-6", Practica3Destroyer.class);
         
         connection.WaitToShutDown();
        

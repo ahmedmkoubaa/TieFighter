@@ -30,7 +30,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     * @author Ahmed
     * @author Antonio
     */
-    private final String password = "106-WING-4";   // Alias de nuestra session
+    private final String password = "106-WING-6";   // Alias de nuestra session
     private int posAparicionX = 0;                  // Pos en la que aparecera el destroyer en X
     private int posAparicionY = 0;                  // Pos en la que aparecera el destroyer en Y
     
@@ -58,7 +58,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private ArrayList<String> corellians;
     private ArrayList<String> razors;
     
-    String service = "PManager", problem = "Erkit",
+    String service = "PManager", problem = "DQar",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
@@ -166,7 +166,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-        logger.offEcho();
+//        logger.offEcho();
         
 //        this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
@@ -479,8 +479,8 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         recorridoPrimerCuadrante = this.getRecorridoPrimerCuadrante();
         recorridoSegundoCuadrante = this.getRecorridoSegundoCuadrante();
         
-        Alert(recorridoPrimerCuadrante.toString());
-        Alert(recorridoSegundoCuadrante.toString());
+//        Alert(recorridoPrimerCuadrante.toString());
+//        Alert(recorridoSegundoCuadrante.toString());
 //        Alert("Este es el recorrido generado");
         
         // generarSpawnPointsCorellian()
@@ -602,7 +602,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             
             distanciaRestante = width/2 - x;
             
-            if(distanciaRestante < movimientoX && distanciaRestante > anchoSensor){
+            if(distanciaRestante <= movimientoX && distanciaRestante > anchoSensor){
                 x += distanciaRestante - anchoSensor;
             }
             else
@@ -687,7 +687,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             
             distanciaRestante = width - x;
             
-            if(distanciaRestante < movimientoX && distanciaRestante > anchoSensor){
+            if(distanciaRestante <= movimientoX && distanciaRestante > anchoSensor){
                 x += distanciaRestante - anchoSensor;
             }
             else
@@ -1406,15 +1406,15 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                 break;
                 
             case ACLMessage.FAILURE: 
-                Info("HE RECIBIDO UN FAILURE DE CAPTURE");
-                Alert("RECIBIDO FAILURE: " + inbox.getContent());
+                Info("HE RECIBIDO UN FAILURE DE CAPTURE " + inbox.toString());
+                Alert("RECIBIDO FAILURE: " + inbox.toString());
                 
                 String agenteFallido = null;
                 
                 index = corellians.indexOf(getSenderName(inbox.getSender()));
                 if (index >= 0) {
                     corellianCancelado[index] = true;
-                    corellianOcupado[index] = true;   
+                    corellianOcupado[index] = false;    // No esta ocupado, esta listo para morir
                     agenteFallido = corellians.get(index);
                     
                 } else {
@@ -1584,7 +1584,8 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         // cancelamos los corellian (nos aseguramos que no hay mas encontrados)
         
         for (int i = 0; i < corellians.size(); i++){
-            if (fighterCancelado[i] && !corellianOcupado[i] && encontrados.get(i).isEmpty()) {
+            if (fighterCancelado[i] && !corellianOcupado[i] && 
+                !corellianCancelado[i] && encontrados.get(i).isEmpty()) {
                 outbox = new ACLMessage();
                 outbox.setSender(getAID());
 

@@ -67,7 +67,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     /*
     * @author Jaime
     */
-    private String pass = "106-WING-4";
+    private String pass = "106-WING-6";
     private String type = "Corellian";
     
     private int initX;
@@ -112,7 +112,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-//        logger.offEcho();
+        logger.offEcho();
 
         //this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
@@ -373,10 +373,18 @@ public class Practica3Corellian extends LARVAFirstAgent{
                     
                     
                     // Ejecuto la accion
-                    if (!myExecuteAction(nextAction)) return Status.CHECKOUT;
+                    if (!myExecuteAction(nextAction)) {
+                        Error("FALLO EN EL EXECUTE ACTION");
+                        return Status.CHECKOUT;
+                        
+                    }
                     
                     // Observo el entorno y repito
-                    if (!myReadSensors()) return Status.CHECKOUT;
+                    if (!myReadSensors()) {
+                        Error("FALLO EN EL READ SENSORS");
+                        return Status.CHECKOUT;
+                        
+                    }
                 }
                 
                 // Info("POSICION FINAL: X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
