@@ -65,7 +65,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     /*
     * @author Jaime
     */
-    private String pass = "106-WING-2";
+    private String pass = "106-WING-4";
     
     private int initX;
     private int initY;
@@ -439,78 +439,78 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                 this.LARVAsend(outbox);
                 
                 
-                //boolean lecturaCorrecta = myReadSensors();
-                myReadSensors();
-                int cont = 0;
-                boolean jediDetected = false;
-                int jediX = -1, jediY = -1;
-                int posI, posJ;
-                posI = posJ = -1;
-                double jediXReal = -1, jediYReal = -1;
-                int[][] thermal = myDashboard.getThermal();
-                int pi = (int) (myDashboard.getGPS()[0]);
-                int pj = (int) (myDashboard.getGPS()[1]);
-                
-                /*
-                * @author Ahmed
-                */
-                // Comprobar si en la casilla en la que estoy hay un jedi
-                // mi casilla esta en el centro del thermal, luego es la 10 10.
-                // No hace falta comprobar la casilla de esta manera pues al
-                // buscar jedis se inspeccionan todas las casillas siempre
-                pi = pj = 10;
-                
-                /*
-                * @author Antonio
-                */
-                if (thermal[pi][pj] == 0) {
-                    jediDetected = true;
-                    jediX = pj - 10;
-                    jediY = pi - 10;
-                    
-                    posI = pi;
-                    posJ = pj;
-                    
-                    // Sumamos ademas ahora el GPS
-                    jediXReal = jediX + myDashboard.getGPS()[0];
-                    jediYReal = jediY + myDashboard.getGPS()[1];
-                }   
-                
-                if (jediDetected) {
-                    String pos
-                            = "X: " + jediXReal + ", Y: " + jediYReal;
-                    
-                    Info("Esta es la posicion encontrada: " + pos);
-                    
-                    boolean aniadido = false;
-                    for (String s : jedisEncontrados) {
-                        if (s.equals(pos)) {
-                            aniadido = true;
-                        }
-                    }
-                    
-                    if (!aniadido) {
-                        jedisEncontrados.add(pos);
-                        /*
-                        @author Antonio
-                        @author Ahmed
-                        Enviamos mensaje al destroyer con los jedi encontrados
-                        */
-                        
-                        //Cambiamos la forma en la que se inserta la pos del jedi,
-                        //para utilizar split() y así obtenemos la x e y.
-                        outbox = open.createReply();
-                        outbox.setPerformative(ACLMessage.INFORM_REF);
-                        outbox.setConversationId(sessionKey);
-                        outbox.setOntology("COMMITMENT");
-                        outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
-                        outbox.setContent("FOUND " + (int) jediXReal + " " + (int) jediYReal);
-                        this.LARVAsend(outbox);
-                        
-                    }
-                    
-                }  
-                
+//                //boolean lecturaCorrecta = myReadSensors();
+//                myReadSensors();
+//                int cont = 0;
+//                boolean jediDetected = false;
+//                int jediX = -1, jediY = -1;
+//                int posI, posJ;
+//                posI = posJ = -1;
+//                double jediXReal = -1, jediYReal = -1;
+//                int[][] thermal = myDashboard.getThermal();
+//                int pi = (int) (myDashboard.getGPS()[0]);
+//                int pj = (int) (myDashboard.getGPS()[1]);
+//                
+//                /*
+//                * @author Ahmed
+//                */
+//                // Comprobar si en la casilla en la que estoy hay un jedi
+//                // mi casilla esta en el centro del thermal, luego es la 10 10.
+//                // No hace falta comprobar la casilla de esta manera pues al
+//                // buscar jedis se inspeccionan todas las casillas siempre
+//                pi = pj = 10;
+//                
+//                /*
+//                * @author Antonio
+//                */
+//                if (thermal[pi][pj] == 0) {
+//                    jediDetected = true;
+//                    jediX = pj - 10;
+//                    jediY = pi - 10;
+//                    
+//                    posI = pi;
+//                    posJ = pj;
+//                    
+//                    // Sumamos ademas ahora el GPS
+//                    jediXReal = jediX + myDashboard.getGPS()[0];
+//                    jediYReal = jediY + myDashboard.getGPS()[1];
+//                }   
+//                
+//                if (jediDetected) {
+//                    String pos
+//                            = "X: " + jediXReal + ", Y: " + jediYReal;
+//                    
+//                    Info("Esta es la posicion encontrada: " + pos);
+//                    
+//                    boolean aniadido = false;
+//                    for (String s : jedisEncontrados) {
+//                        if (s.equals(pos)) {
+//                            aniadido = true;
+//                        }
+//                    }
+//                    
+//                    if (!aniadido) {
+//                        jedisEncontrados.add(pos);
+//                        /*
+//                        @author Antonio
+//                        @author Ahmed
+//                        Enviamos mensaje al destroyer con los jedi encontrados
+//                        */
+//                        
+//                        //Cambiamos la forma en la que se inserta la pos del jedi,
+//                        //para utilizar split() y así obtenemos la x e y.
+//                        outbox = open.createReply();
+//                        outbox.setPerformative(ACLMessage.INFORM_REF);
+//                        outbox.setConversationId(sessionKey);
+//                        outbox.setOntology("COMMITMENT");
+//                        outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
+//                        outbox.setContent("FOUND " + (int) jediXReal + " " + (int) jediYReal);
+//                        this.LARVAsend(outbox);
+//                        
+//                    }
+//                    
+//                }  
+//                
                 // Hasta que no barra todo el mapa
                 while (!(myDashboard.getGPS()[0] == myX && myDashboard.getGPS()[1] == myY)) {
                     
@@ -531,7 +531,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
 
 //                Info("X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
 //                Info("Accion: " + nextAction);
-                    cont++;
+//                    cont++;
 
                     // Despues de actualizar los sensores en la posicion actual
                     // Miramos a ver el thermal y si tenemos o no un Jedi detectado

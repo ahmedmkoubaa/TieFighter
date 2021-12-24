@@ -44,7 +44,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     private final int gradoTotal = 360;
    
     
-    private final double porcentajeLimite = 0.2;
+    private final double porcentajeLimite = 0.15;
     private final double porcentajeCercania = 0.8;
     private final int alturaCercania = 20;
     
@@ -67,7 +67,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     /*
     * @author Jaime
     */
-    private String pass = "106-WING-2";
+    private String pass = "106-WING-4";
     private String type = "Corellian";
     
     private int initX;

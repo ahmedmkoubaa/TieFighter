@@ -30,7 +30,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     * @author Ahmed
     * @author Antonio
     */
-    private final String password = "106-WING-2";     // Alias de nuestra session
+    private final String password = "106-WING-4";     // Alias de nuestra session
     private int posAparicionX = 0;                  // Pos en la que aparecera el destroyer en X
     private int posAparicionY = 0;                  // Pos en la que aparecera el destroyer en Y
     
@@ -50,15 +50,15 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     //      Ando
     //      Bogano
     //      Coruscant
-    //      D’Qar
-    //      Er’kit
+    //      DQar
+    //      Erkit
     //      Fondor
 
     private ArrayList<String> fighters;
     private ArrayList<String> corellians;
     private ArrayList<String> razors;
     
-    String service = "PManager", problem = "Bogano",
+    String service = "PManager", problem = "Erkit",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
@@ -470,8 +470,8 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         recorridoPrimerCuadrante = this.getRecorridoPrimerCuadrante();
         recorridoSegundoCuadrante = this.getRecorridoSegundoCuadrante();
         
-        Info(recorridoPrimerCuadrante.toString());
-        Info(recorridoSegundoCuadrante.toString());
+        Alert(recorridoPrimerCuadrante.toString());
+        Alert(recorridoSegundoCuadrante.toString());
 //        Alert("Este es el recorrido generado");
         
         // generarSpawnPointsCorellian()
@@ -538,7 +538,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private ArrayList<String> getRecorridoPrimerCuadrante(){
         int x = anchoSensor, y = anchoSensor;
         
-        int auxiliar;
+        int distanciaRestante;
         
         ArrayList<String> puntos = new ArrayList<>();
         
@@ -562,10 +562,10 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                     String.valueOf(alturaFighter)
             );
             
-            auxiliar = width/2 - x;
+            distanciaRestante = width/2 - x;
             
-            if(auxiliar < movimientoX && auxiliar > anchoSensor){
-                x += auxiliar - anchoSensor;
+            if(distanciaRestante <= movimientoX && distanciaRestante > anchoSensor){
+                x += distanciaRestante - anchoSensor;
             }
             else
                  x += movimientoX;
@@ -591,10 +591,10 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                     String.valueOf(alturaFighter)
             );
             
-            auxiliar = width/2 - x;
+            distanciaRestante = width/2 - x;
             
-            if(auxiliar < movimientoX && auxiliar > anchoSensor){
-                x += auxiliar - anchoSensor;
+            if(distanciaRestante < movimientoX && distanciaRestante > anchoSensor){
+                x += distanciaRestante - anchoSensor;
             }
             else
                  x += movimientoX;
@@ -623,7 +623,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private ArrayList<String> getRecorridoSegundoCuadrante(){
         int x = width/2 + anchoSensor, y = anchoSensor;
         
-        int auxiliar;
+        int distanciaRestante;
         
         ArrayList<String> puntos = new ArrayList<>();
         
@@ -647,10 +647,10 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                     String.valueOf(alturaFighter)
             );
             
-            auxiliar = width - x;
+            distanciaRestante = width - x;
             
-            if(auxiliar < movimientoX && auxiliar > anchoSensor){
-                x += auxiliar - anchoSensor;
+            if(distanciaRestante <= movimientoX && distanciaRestante > anchoSensor){
+                x += distanciaRestante - anchoSensor;
             }
             else
                  x += movimientoX;
@@ -676,10 +676,10 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                     String.valueOf(alturaFighter)
             );
             
-            auxiliar = width - x;
+            distanciaRestante = width - x;
             
-            if(auxiliar < movimientoX && auxiliar > anchoSensor){
-                x += auxiliar - anchoSensor;
+            if(distanciaRestante < movimientoX && distanciaRestante > anchoSensor){
+                x += distanciaRestante - anchoSensor;
             }
             else
                  x += movimientoX;
