@@ -87,6 +87,25 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     
     private int compass = 0;
     
+    /*
+    *@author Ahmed
+    */
+    // Emular sensor de energy, se actualiza
+    // en myReadSensors y en myExecuteAction
+    private double myEnergy = maxEnergy;
+    private final int costeAccion = 1;
+    private final int costeSensor = 1;
+    
+    // Acciones cuya ejecucion se cobra a costeAccion
+    private String [] accionesCobrables =
+            new String[] {
+                "UP", 
+                "DOWN", 
+                "LEFT", 
+                "RIGHT", 
+                "MOVE"
+            } ;
+    
     private String map;
     
     private double alturaTie;
@@ -102,10 +121,10 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
 //                "ONTARGET",   // No 
                 "GPS",        // si
 //                "COMPASS",  // SI
-//                "LIDAR",
+//                "LIDAR",  // SI
 //                "ALTITUDE",   // No
 //                "VISUAL",     // No
-                "ENERGY",       // SI
+//                "ENERGY",       // SI
 //                "PAYLOAD",
 //                "DISTANCE",
 //                "ANGULAR",    // SI
@@ -445,10 +464,10 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                     if (!myReadSensors()) return Status.CHECKOUT;
                     
                     // Si no tenemos energia tambien nos detenemos
-                    if (myDashboard.getEnergy() == 0) return Status.CHECKOUT;
+                    if (myEnergy == 0) return Status.CHECKOUT;
                     
                     Info("\n\n\n\n\n\n");
-                    Info("NIVEL DE VIDA ES: " + myDashboard.getEnergy());
+                    Info("MY ENERGY ES: " + myEnergy);
                     Info("LIMITE ES: " +  umbralLimiteRecarga);
                     Info("\n\n\n\n\n\n");
 
@@ -632,7 +651,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         String nextAction = "";
         Point p = new Point(objetivoX,objetivoY);
 
-        if (!recargaPedida && myDashboard.getEnergy() < umbralLimiteRecarga) {
+        if (!recargaPedida && myEnergy < umbralLimiteRecarga) {
             pedirRecarga();
         }
 
@@ -822,6 +841,9 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
             return false;
         }
         
+        // ACTUALIZAR COSTE SENSORES
+        myEnergy -= (mySensors.length * costeSensor);
+        
         return true;
     }
     
@@ -844,6 +866,32 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         content = inbox.getContent();
         
         if (inbox.getPerformative() == ACLMessage.INFORM) {
+            
+            /*
+            * @author Ahmed
+            */
+            // ACTUALIZAR ENERGIA COMO ES DEBIDO
+            if (accion.equals("RECHARGE")) {
+                myEnergy = maxEnergy;
+                Info("ENERGIA RECARGADA COMPLETAMENTE");
+            }
+            else {
+                
+                // En otro caso, tenemos que identificar cual fue 
+                // la accion que se llevo a cabo y si es necesario
+                // actualizar la energia o no
+                
+               
+
+                // Busca y actualiza
+                for (String s: accionesCobrables) {
+                    if (s.equals(accion)) {
+                        myEnergy -= costeAccion;
+                        break;
+                    }
+                }
+            }
+            
             return true;
         } else {
             Info("MyExecuteAction: " + content);

@@ -51,7 +51,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     
     // Atributos en los que se almacenaran los valores
     // correspondientes a umbrales de recarga
-    private double maxEnergy = 3500;
+    private final double maxEnergy = 3500;
     private double umbralLimiteRecarga = porcentajeLimite * maxEnergy;
     private double umbralCercaniaRecarga; 
     
@@ -64,6 +64,25 @@ public class Practica3Corellian extends LARVAFirstAgent{
     private ArrayList<double[]> casillasProhibidas = new ArrayList<>();
     
     private ArrayList<String> acciones = new ArrayList<>();
+    
+    /*
+    *@author Ahmed
+    */
+    // Emular sensor de energy, se actualiza
+    // en myReadSensors y en myExecuteAction
+    private double myEnergy = maxEnergy;
+    private final int costeAccion = 10;
+    private final int costeSensor = 1;
+    
+    // Acciones cuya ejecucion se cobra a costeAccion
+    private String [] accionesCobrables =
+            new String[] {
+                "UP", 
+                "DOWN", 
+                "LEFT", 
+                "RIGHT", 
+                "MOVE"
+            } ;
     
     /*
     * @author Jaime
@@ -97,7 +116,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     String[] contentTokens,
             mySensors = new String[] {
 //                "ALIVE", 
-                "ENERGY",
+//                "ENERGY",
                 "GPS",     
 //                "LIDAR",
 //                "DISTANCE",
@@ -114,7 +133,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-//        logger.offEcho();
+        logger.offEcho();
 
         //this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
@@ -336,7 +355,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 Info("X: " + objetivoX + ", Y: " + objetivoY + ", Z: " + objetivoZ);
                 boolean lecturaCorrecta = myReadSensors();
                
-                if(myDashboard.getEnergy() == 0){
+                if(myEnergy == 0){
                     Error("CORELLIAN SIN VIDA SE MURIO");
                     return Status.CHECKOUT;
                 }   
@@ -366,7 +385,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
                     nextAction = myTakeDecision2();
                     
                     Info("\n\n\n\n\n\n");
-                    Info("NIVEL DE VIDA ES: " + myDashboard.getEnergy());
+                    Info("MY ENERGY ES: " + myEnergy);
                     Info("LIMITE ES: " +  umbralLimiteRecarga);
                     Info("\n\n\n\n\n\n");
                     
@@ -568,7 +587,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         double alturaActual = myDashboard.getGPS()[2];
         double [] gps = myDashboard.getGPS();
         
-        if (!recargaPedida && myDashboard.getEnergy() < umbralLimiteRecarga) {
+        if (!recargaPedida && myEnergy < umbralLimiteRecarga) {
             pedirRecarga();
         }
         
@@ -659,7 +678,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         String nextAction = "";
         
         if (false) {
-            maxEnergy = myDashboard.getEnergy() + myDashboard.getEnergyBurnt();   
+//            maxEnergy = myDashboard.getEnergy() + myDashboard.getEnergyBurnt();   
             umbralLimiteRecarga = porcentajeLimite * maxEnergy;
             umbralCercaniaRecarga = porcentajeCercania * maxEnergy;
             nextAction = "RECHARGE";
@@ -897,6 +916,10 @@ public class Practica3Corellian extends LARVAFirstAgent{
             return false;
         }
         
+        // ACTUALIZAR COSTE SENSORES
+        myEnergy -= (mySensors.length * costeSensor);
+        
+        
         return true;
     }
     
@@ -919,6 +942,30 @@ public class Practica3Corellian extends LARVAFirstAgent{
         content = inbox.getContent();
         
         if (inbox.getPerformative() == ACLMessage.INFORM) {
+            
+            /*
+            * @author Ahmed
+            */
+            // ACTUALIZAR ENERGIA COMO ES DEBIDO
+            if (accion.equals("RECHARGE")) {
+                myEnergy = maxEnergy;
+                Info("ENERGIA RECARGADA COMPLETAMENTE");
+            }
+            else {
+                
+                // En otro caso, tenemos que identificar cual fue 
+                // la accion que se llevo a cabo y si es necesario
+                // actualizar la energia o no
+
+                // Busca y actualiza
+                for (String s: accionesCobrables) {
+                    if (s.equals(accion)) {
+                        myEnergy -= costeAccion;
+                        break;
+                    }
+                }
+            }
+            
             return true;
         } else {
             Info("MyExecuteAction: " + content);
