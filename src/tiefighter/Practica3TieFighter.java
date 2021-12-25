@@ -65,14 +65,14 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     /*
     * @author Jaime
     */
-    private String pass = "106-WING-6";
+    private String password = "106-WING-7";
     
     private int initX;
     private int initY;
     
-    private int myX;
-    private int myY;
-    private int myZ;
+    private int objetivoX;
+    private int objetivoY;
+    private int objetivoZ;
     private int myAngular;
     
     /*
@@ -101,7 +101,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
 //                "ONTARGET",   // No 
                 "GPS",        // No
 //                "COMPASS",
-                "LIDAR",
+//                "LIDAR",
 //                "ALTITUDE",   // No
 //                "VISUAL",     // No
                 "ENERGY",
@@ -190,7 +190,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
             Error("Unable to checkin");
             return Status.EXIT;
         }
-        DFSetMyServices(new String[]{"FIGHTER " + pass});
+        DFSetMyServices(new String[]{"FIGHTER " + password});
         return Status.WAIT;
     }
     
@@ -204,7 +204,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         outbox = open.createReply();
         outbox.setPerformative(ACLMessage.AGREE);
         outbox.setConversationId(sessionKey);
-        outbox.setInReplyTo("Recruit crew for session " + pass);
+        outbox.setInReplyTo("Recruit crew for session " + password);
         outbox.setContent("");
         this.LARVAsend(outbox);
         
@@ -304,7 +304,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
             outbox = open.createReply();
             outbox.setPerformative(ACLMessage.INFORM);
             outbox.setConversationId(sessionKey);
-            outbox.setInReplyTo("TAKEOFF " + pass);
+            outbox.setInReplyTo("TAKEOFF " + password);
             outbox.setContent(initX + " " + initY);
             this.LARVAsend(outbox);
             return Status.SOLVEPROBLEM;
@@ -349,7 +349,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
             outbox.setPerformative(ACLMessage.INFORM_REF);
             outbox.setConversationId(sessionKey);
             outbox.setOntology("COMMITMENT");
-            outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
+            outbox.setInReplyTo("MOVE " + objetivoX + " " + objetivoY + " " + objetivoZ);
             outbox.setContent("FOUND " + (int) jediXReal + " " + (int) jediYReal);
             this.LARVAsend(outbox);
         }
@@ -428,93 +428,22 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                 }   
                 
                 // Obtenemos direccion objetivo
-                myX = Integer.parseInt(open.getContent().split(" ")[1]);
-                myY = Integer.parseInt(open.getContent().split(" ")[2]);
-                myZ = Integer.parseInt(open.getContent().split(" ")[3]);
+                objetivoX = Integer.parseInt(open.getContent().split(" ")[1]);
+                objetivoY = Integer.parseInt(open.getContent().split(" ")[2]);
+                objetivoZ = Integer.parseInt(open.getContent().split(" ")[3]);
                 
                 // Informamos que estamos de acuerdo en ir
                 outbox = open.createReply();
                 outbox.setPerformative(ACLMessage.AGREE);
                 outbox.setConversationId(sessionKey);
-                outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
+                outbox.setInReplyTo("MOVE " + objetivoX + " " + objetivoY + " " + objetivoZ);
                 outbox.setContent("");
                 this.LARVAsend(outbox);
                 
                 
-//                //boolean lecturaCorrecta = myReadSensors();
-//                myReadSensors();
-//                int cont = 0;
-//                boolean jediDetected = false;
-//                int jediX = -1, jediY = -1;
-//                int posI, posJ;
-//                posI = posJ = -1;
-//                double jediXReal = -1, jediYReal = -1;
-//                int[][] thermal = myDashboard.getThermal();
-//                int pi = (int) (myDashboard.getGPS()[0]);
-//                int pj = (int) (myDashboard.getGPS()[1]);
-//                
-//                /*
-//                * @author Ahmed
-//                */
-//                // Comprobar si en la casilla en la que estoy hay un jedi
-//                // mi casilla esta en el centro del thermal, luego es la 10 10.
-//                // No hace falta comprobar la casilla de esta manera pues al
-//                // buscar jedis se inspeccionan todas las casillas siempre
-//                pi = pj = 10;
-//                
-//                /*
-//                * @author Antonio
-//                */
-//                if (thermal[pi][pj] == 0) {
-//                    jediDetected = true;
-//                    jediX = pj - 10;
-//                    jediY = pi - 10;
-//                    
-//                    posI = pi;
-//                    posJ = pj;
-//                    
-//                    // Sumamos ademas ahora el GPS
-//                    jediXReal = jediX + myDashboard.getGPS()[0];
-//                    jediYReal = jediY + myDashboard.getGPS()[1];
-//                }   
-//                
-//                if (jediDetected) {
-//                    String pos
-//                            = "X: " + jediXReal + ", Y: " + jediYReal;
-//                    
-//                    Info("Esta es la posicion encontrada: " + pos);
-//                    
-//                    boolean aniadido = false;
-//                    for (String s : jedisEncontrados) {
-//                        if (s.equals(pos)) {
-//                            aniadido = true;
-//                        }
-//                    }
-//                    
-//                    if (!aniadido) {
-//                        jedisEncontrados.add(pos);
-//                        /*
-//                        @author Antonio
-//                        @author Ahmed
-//                        Enviamos mensaje al destroyer con los jedi encontrados
-//                        */
-//                        
-//                        //Cambiamos la forma en la que se inserta la pos del jedi,
-//                        //para utilizar split() y así obtenemos la x e y.
-//                        outbox = open.createReply();
-//                        outbox.setPerformative(ACLMessage.INFORM_REF);
-//                        outbox.setConversationId(sessionKey);
-//                        outbox.setOntology("COMMITMENT");
-//                        outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
-//                        outbox.setContent("FOUND " + (int) jediXReal + " " + (int) jediYReal);
-//                        this.LARVAsend(outbox);
-//                        
-//                    }
-//                    
-//                }  
-//                
                 // Hasta que no barra todo el mapa
-                while (!(myDashboard.getGPS()[0] == myX && myDashboard.getGPS()[1] == myY)) {
+                while (!(myDashboard.getGPS()[0] == objetivoX && 
+                        myDashboard.getGPS()[1] == objetivoY)) {
                     
                     // Modo de actuar del agente
                     String nextAction = myTakeDecision2();
@@ -536,10 +465,6 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                     Info("LIMITE ES: " +  umbralLimiteRecarga);
                     Info("\n\n\n\n\n\n");
 
-//                Info("X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
-//                Info("Accion: " + nextAction);
-//                    cont++;
-
                     // Despues de actualizar los sensores en la posicion actual
                     // Miramos a ver el thermal y si tenemos o no un Jedi detectado
                     buscarJedis();
@@ -553,9 +478,10 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                 outbox = open.createReply();
                 outbox.setPerformative(ACLMessage.INFORM);
                 outbox.setConversationId(sessionKey);
-                outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
-                outbox.setContent("MOVE " + myX + " " + myY + " " + myZ);
+                outbox.setInReplyTo("MOVE " + objetivoX + " " + objetivoY + " " + objetivoZ);
+                outbox.setContent("MOVE " + objetivoX + " " + objetivoY + " " + objetivoZ);
                 this.LARVAsend(outbox);
+                
                 /*
                 @author Ahmed
                 */
@@ -584,16 +510,16 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
             case "MOVE":
                 switch(myAngular){
                     case 0:
-                        myX+=1;
+                        objetivoX+=1;
                         break;
                     case 90:
-                        myY-=1;
+                        objetivoY-=1;
                         break;
                     case 180:
-                        myX-=1;
+                        objetivoX-=1;
                         break;
                     case 270:
-                        myY+=1;
+                        objetivoY+=1;
                         break;
                         
                 }
@@ -607,14 +533,35 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                 myAngular%=360;
                 break;
             case "UP":
-                myZ=+5;
+                objetivoZ=+5;
                 break;
             case "DOWN":
-                myZ-=5;
+                objetivoZ-=5;
                 break;
         }
     }
 
+    /*
+    * @author Ahmed
+    */
+    // Devuelve true si el agente esta posado justamente sobre el suelo
+    // false en caso contrario. Se supone que si la altura de la casilla
+    // en la que esta el agente y la altura del agente son la misma
+    // entonces esta posado sobre al suelo (a nivel del suelo)
+    private boolean estaSobreElSuelo() {
+        return (
+            myDashboard.getGPS()[2] ==                 // Altura en Z
+            myDashboard.getMapLevel(                   // Map level
+                (int) myDashboard.getGPS()[0],     // Coordenada X
+                (int) myDashboard.getGPS()[1]      // Coordenada Y
+            ));
+    }
+    
+    /*
+    *@author Ahmed
+    */
+    // Pide recarga al destroyer y espera la respuesta
+    // actualiza ademas el estado pertinente
     private void pedirRecarga(){
         //------------------------------------------------
         // Crear respuesta
@@ -625,7 +572,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         outbox.setConversationId(sessionKey);
             
         // Contenido
-        outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
+        outbox.setInReplyTo("MOVE " + objetivoX + " " + objetivoY + " " + objetivoZ);
         outbox.setContent("RECHARGE");
         outbox.setOntology("COMMITMENT");
         recargaPedida = true;
@@ -653,30 +600,36 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     */  
     private String myTakeDecision2(){
         String nextAction = "";
-        Point p = new Point(myX,myY);
+        Point p = new Point(objetivoX,objetivoY);
 
         if (!recargaPedida && myDashboard.getEnergy() < umbralLimiteRecarga) {
             pedirRecarga();
         }
 
+        // Si estamos recargando
         if (recargando) {
             
-            Info("/n/n/n/n");
+            Info("\n\n\n\n");
             Info("ESTAMOS YENDO A RECARGAR");
-            Info("/n/n/n/n");
+            Info("\n\n\n\n");
             
             // Bajamos al suelo para ejecutar la accion de recarga
-            if (myDashboard.getLidar()[5][5] > 0) {
+//            if (myDashboard.getLidar()[5][5] > 0) {
+
+            
+            // Si no estamos sobre el suelo bajamos, 
+            // en otro caso recargamos y reseteamos estado
+            if (!estaSobreElSuelo()) {
                 nextAction = "DOWN";
                 
-            } else if (myDashboard.getLidar()[5][5] == 0) {
+            } else {
                 nextAction = "RECHARGE";
                 recargando = false;
                 recargaPedida = false;
             }
-        }else{
+        } else {
             
-            alturaTie = myZ; //aqui recibe la que le diga el destroyer
+            alturaTie = objetivoZ; //aqui recibe la que le diga el destroyer
             double alturaActual = myDashboard.getGPS()[2];
         
             if(alturaActual == alturaTie){

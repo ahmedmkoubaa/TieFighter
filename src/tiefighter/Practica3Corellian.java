@@ -42,9 +42,9 @@ public class Practica3Corellian extends LARVAFirstAgent{
     };
     private int sigAction = 0;
     private final int gradoTotal = 360;
-   
     
-    private final double porcentajeLimite = 0.15;
+    
+    private final double porcentajeLimite = 0.15; // TEMPORAL
     private final double porcentajeCercania = 0.8;
     private final int alturaCercania = 20;
     
@@ -67,7 +67,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     /*
     * @author Jaime
     */
-    private String pass = "106-WING-6";
+    private String password = "106-WING-7";
     private String type = "Corellian";
     
     private int initX;
@@ -75,9 +75,9 @@ public class Practica3Corellian extends LARVAFirstAgent{
     
     private double alturaCorellian = -1;
     
-    private int myX;
-    private int myY;
-    private int myZ;
+    private int objetivoX;
+    private int objetivoY;
+    private int objetivoZ;
     private int myAngular;
     
     /*
@@ -98,7 +98,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
 //                "ALIVE", 
                 "ENERGY",
                 "GPS",     
-                "LIDAR",
+//                "LIDAR",
 //                "DISTANCE",
                 "ANGULAR",
             };
@@ -112,7 +112,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-        logger.offEcho();
+//        logger.offEcho();
 
         //this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
@@ -180,7 +180,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
             Error("Unable to checkin");
             return Status.EXIT;
         }
-        DFSetMyServices(new String[]{"CORELLIAN " + pass});
+        DFSetMyServices(new String[]{"CORELLIAN " + password});
         return Status.WAIT;
     }
     
@@ -195,7 +195,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         outbox = open.createReply();
         outbox.setPerformative(ACLMessage.AGREE);
         outbox.setConversationId(sessionKey);
-        outbox.setInReplyTo("Recruit crew for session " + pass);
+        outbox.setInReplyTo("Recruit crew for session " + password);
         outbox.setContent("");
         this.LARVAsend(outbox);
         
@@ -295,7 +295,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
             outbox = open.createReply();
             outbox.setPerformative(ACLMessage.INFORM);
             outbox.setConversationId(sessionKey);
-            outbox.setInReplyTo("TAKEOFF " + pass);
+            outbox.setInReplyTo("TAKEOFF " + password);
             outbox.setContent(initX + " " + initY);
             this.LARVAsend(outbox);
             return Status.SOLVEPROBLEM;
@@ -323,15 +323,15 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 
                 String [] content = open.getContent().split(" ");
                 
-                myX = Integer.parseInt(content[1]);
-                myY = Integer.parseInt(content[2]);
-                myZ = Integer.parseInt(content[3]);
+                objetivoX = Integer.parseInt(content[1]);
+                objetivoY = Integer.parseInt(content[2]);
+                objetivoZ = Integer.parseInt(content[3]);
                 
                 // La primera vez que obtengamos Z nos la guardamos
-                if (alturaCorellian < 0) alturaCorellian = myZ; 
+                if (alturaCorellian < 0) alturaCorellian = objetivoZ; 
                 
                 
-                Info("X: " + myX + ", Y: " + myY + ", Z: " + myZ);
+                Info("X: " + objetivoX + ", Y: " + objetivoY + ", Z: " + objetivoZ);
                 boolean lecturaCorrecta = myReadSensors();
                
                 if(myDashboard.getEnergy() == 0){
@@ -348,7 +348,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
                     outbox.setPerformative(ACLMessage.AGREE);
                     
                     outbox.setConversationId(sessionKey);
-                    outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
+                    outbox.setInReplyTo("MOVE " + objetivoX + " " + objetivoY + " " + objetivoZ);
                     outbox.setContent("");
                     
                     this.LARVAsend(outbox);
@@ -356,12 +356,9 @@ public class Practica3Corellian extends LARVAFirstAgent{
 //                    Alert("ME MANDAN CAPTURAR");
                 }
                 
-                
-                int cont = 0;
-                
                 // Hasta que no barra todo el mapa
-                while(!(myDashboard.getGPS()[0] == myX &&   // X
-                        myDashboard.getGPS()[1] == myY )){   // Z
+                while(!(myDashboard.getGPS()[0] == objetivoX &&   // X
+                        myDashboard.getGPS()[1] == objetivoY )){   // Z
                     
                     // Modo de actuar del agente
                     nextAction = myTakeDecision2();
@@ -400,8 +397,8 @@ public class Practica3Corellian extends LARVAFirstAgent{
                     outbox.setConversationId(sessionKey);
                     
                     // Contenido
-                    outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
-                    outbox.setContent("MOVE " + myX + " " + myY + " " + myZ);
+                    outbox.setInReplyTo("MOVE " + objetivoX + " " + objetivoY + " " + objetivoZ);
+                    outbox.setContent("MOVE " + objetivoX + " " + objetivoY + " " + objetivoZ);
                     
                     // Enviar
                     this.LARVAsend(outbox);
@@ -409,7 +406,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 } else if (content[0].toUpperCase().equals("CAPTURE")){
                     
                     // Si toca capturar hacemos lo que se debe hacer
-                    while(myDashboard.getLidar()[5][5] > 0){
+                    while(!estaSobreElSuelo()){
                         nextAction = "DOWN";
                         myExecuteAction(nextAction);            // Ejecuto la accion
                         myReadSensors();
@@ -429,8 +426,8 @@ public class Practica3Corellian extends LARVAFirstAgent{
                     
                     // Aniadir detalles al mensaje
                     outbox.setConversationId(sessionKey);
-                    outbox.setInReplyTo("CAPTURE " + myX + " " + myY + " " + myZ);
-                    outbox.setContent("CAPTURE " + myX + " " + myY + " " + myZ);
+                    outbox.setInReplyTo("CAPTURE " + objetivoX + " " + objetivoY + " " + objetivoZ);
+                    outbox.setContent("CAPTURE " + objetivoX + " " + objetivoY + " " + objetivoZ);
                     
                     this.LARVAsend(outbox);
                 } else {
@@ -457,16 +454,16 @@ public class Practica3Corellian extends LARVAFirstAgent{
             case "MOVE":
                 switch(myAngular){
                     case 0:
-                        myX+=1;
+                        objetivoX+=1;
                         break;
                     case 90:
-                        myY-=1;
+                        objetivoY-=1;
                         break;
                     case 180:
-                        myX-=1;
+                        objetivoX-=1;
                         break;
                     case 270:
-                        myY+=1;
+                        objetivoY+=1;
                         break;
                         
                 }
@@ -480,12 +477,28 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 myAngular%=360;
                 break;
             case "UP":
-                myZ=+5;
+                objetivoZ=+5;
                 break;
             case "DOWN":
-                myZ-=5;
+                objetivoZ-=5;
                 break;
         }
+    }
+    
+    /*
+    * @author Ahmed
+    */
+    // Devuelve true si el agente esta posado justamente sobre el suelo
+    // false en caso contrario. Se supone que si la altura de la casilla
+    // en la que esta el agente y la altura del agente son la misma
+    // entonces esta posado sobre al suelo (a nivel del suelo)
+    private boolean estaSobreElSuelo() {
+        return (
+            myDashboard.getGPS()[2] ==                 // Altura en Z
+            myDashboard.getMapLevel(                   // Map level
+                (int) myDashboard.getGPS()[0],     // Coordenada X
+                (int) myDashboard.getGPS()[1]      // Coordenada Y
+            ));
     }
     
     /*
@@ -503,7 +516,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         outbox.setConversationId(sessionKey);
             
         // Contenido
-        outbox.setInReplyTo("MOVE " + myX + " " + myY + " " + myZ);
+        outbox.setInReplyTo("MOVE " + objetivoX + " " + objetivoY + " " + objetivoZ);
         outbox.setContent("RECHARGE");
         outbox.setOntology("COMMITMENT");
         recargaPedida = true;
@@ -517,9 +530,9 @@ public class Practica3Corellian extends LARVAFirstAgent{
         if (open.getPerformative() == ACLMessage.CONFIRM) {
             recargando = true;
             
-            Info("NOS HAN CONCEDIDO LA RECARGA");
         } else {
             recargando = false;
+            Alert("NOS HAN DENEGADO LA RECARGA, LISTOS PARA MORIR");
         }
     }
     
@@ -530,7 +543,10 @@ public class Practica3Corellian extends LARVAFirstAgent{
     */  
     private String myTakeDecision2(){
         String nextAction = "";
-        Point p = new Point(myX,myY);
+        Point p = new Point(objetivoX,objetivoY);
+        
+        double alturaActual = myDashboard.getGPS()[2];
+        double [] gps = myDashboard.getGPS();
         
         if (!recargaPedida && myDashboard.getEnergy() < umbralLimiteRecarga) {
             pedirRecarga();
@@ -539,27 +555,32 @@ public class Practica3Corellian extends LARVAFirstAgent{
         // Si estamos recargando
         if (recargando) {
             
-            Info("/n/n/n/n");
+            Info("\n\n\n\n");
             Info("ESTAMOS YENDO A RECARGAR");
-            Info("/n/n/n/n");
+            Info("\n\n\n\n");
             
             // Bajamos al suelo para ejecutar la accion de recarga
-            if (myDashboard.getLidar()[5][5] > 0) {
+//            if (myDashboard.getLidar()[5][5] > 0) {
+
+            
+            // Si no estamos sobre el suelo bajamos, 
+            // en otro caso recargamos y reseteamos estado
+            if (!estaSobreElSuelo()) {
                 nextAction = "DOWN";
                 
-            } else if (myDashboard.getLidar()[5][5] == 0) {
+            } else {
                 nextAction = "RECHARGE";
                 recargando = false;
                 recargaPedida = false;
             }
         } else {
-            // si no estamos recargando, seguimos yendo al objetivo
             
-            double alturaActual = myDashboard.getGPS()[2];
+            // si no estamos recargando, seguimos yendo al objetivo
+
         
             // Si estoy a una altura elevada sigo
             // Si no estoy sobre el objetivo me desplazo
-            if ( myX != myDashboard.getGPS()[0] || myY != myDashboard.getGPS()[1]){
+            if ( objetivoX != myDashboard.getGPS()[0] || objetivoY != myDashboard.getGPS()[1]){
 
                 final double angular = this.myDashboard.getAngular(p);
 
@@ -580,21 +601,31 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 else {
                     // Nos movemos pues estamos alineados con el objetivo
                     nextAction = "MOVE";
-
-//                    double [] gps = {myX, myY, myZ};
-//                    double [] res = casillaEnfrente(compass, gps);
-//                    int alturaEnFrente = myDashboard.getMapLevel((int)res[0], (int)res[1]);
+                    
+                    // Comprobamos si la casilla a la que nos vamos a mover
+                    // es mas alta que nosotros (requiere mayor altura)
+                    
+                    double [] res = casillaEnfrente(compass, gps);
+                    int alturaEnFrente = myDashboard.getMapLevel((int)res[0], (int)res[1]);
+                    
+                    Info("\n\n\n\n\n\n");
+                    Info(
+                            "MI GPS: " + gps[0] + " " + gps[1] + " " + gps[2]  + " " + 
+                            "GPS RES: " + res[0] + " " + res[1] + " " + res[2]  + " " + 
+                            "COMPASS: " + compass + " " + 
+                            "ALTURA ENFRENTE: " + alturaEnFrente + " " + 
+                            "MI ALTURA ACTUAL: " + alturaActual
+                    );
+                    Info("\n\n\n\n\n\n");
 
                     // Map level no funciona, siempre devuelve 0 al parecer, no tiene sentido
                     // Porque si que le hemos pasado el mapa la verdad
-                    int alturaEnFrente = mapearAlturaSegunAngulo(compass, myDashboard.getLidar());
+//                    alturaEnFrente = mapearAlturaSegunAngulo(compass, myDashboard.getLidar());
 
 
 
-                    // Para no estrellarnos al frente
-                    // No ha hecho falta comprobar que estemos 
-                    // encima porque se comprobo en el if
-                    if (alturaEnFrente < 0) {
+                    // Si nuestra altura es menor que la de enfrente, entonces tengo que subir
+                    if (alturaActual < alturaEnFrente) {
                         nextAction = "UP";
                         Info("TENGO QUE SUBIR");
                     }
