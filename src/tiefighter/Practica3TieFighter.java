@@ -66,7 +66,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     /*
     * @author Jaime
     */
-    private String password = "106-WING-8";
+    private String password = "106-WING-9";
     
     private int initX;
     private int initY;
@@ -458,7 +458,10 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                 this.LARVAsend(outbox);
                 
                 // Lectura adelantada de los sensores
-                if (!myReadSensors()) return Status.CHECKOUT;
+                if (!myReadSensors()) {
+                    Error("FALLO AL LEER SENSORES EN LECTURA ADELANTADA");
+                    return Status.CHECKOUT;
+                }
                 
                 // Hasta que no barra todo el mapa
                 while (!(myGPS[0] == objetivoX && 
@@ -472,13 +475,22 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                     // En cuanto algo salga mal, sin dudar aboratmos los agentes
                     // EVITAR QUE LARVA QUEDE EMBUCLADO Y NOS BANEEN LOS RUSOS
                     // Ejecuto la accion
-                    if (!myExecuteAction(nextAction)) return Status.CHECKOUT;
+                    if (!myExecuteAction(nextAction)){
+                        Error("FALLO AL EJECUTAR ACCION EN BUCLE");
+                        return Status.CHECKOUT;
+                    }
                     
                     // Observo el entorno y repito
-                    if (!myReadSensors()) return Status.CHECKOUT;
+                    if (!myReadSensors()) {
+                        Error("FALLO EL LEER SENSORES EN BUCLE");
+                        return Status.CHECKOUT;
+                    }
                     
                     // Si no tenemos energia tambien nos detenemos
-                    if (myEnergy == 0) return Status.CHECKOUT;
+                    if (myEnergy == 0) {
+                        Error("FALLO: NOS HEMOS QUEDADO SIN ENERGIA");
+                        return Status.CHECKOUT;
+                    }
                     
                     Info("\n\n\n\n\n\n");
                     Info("MY ENERGY ES: " + myEnergy);
@@ -515,8 +527,14 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                         
                         // Si no podemos actuar o percibir el
                         // entorno correctamente, salimos para evitar fallos
-                        if (!myExecuteAction(nextAction)) return Status.CHECKOUT;
-                        if (!myReadSensors()) return Status.CHECKOUT;
+                        if (!myExecuteAction(nextAction)) {
+                            Error("FALLO AL EJECUTAR ACCION EN DESPEGANDO");
+                            return Status.CHECKOUT;
+                        }
+                        if (!myReadSensors()) {
+                            Error("FALLO AL LEER SENSORES EN DESPEGANDO");
+                            return Status.CHECKOUT;
+                        }
                         
                         buscarJedis();
                         
@@ -638,7 +656,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         if (open.getPerformative() == ACLMessage.CONFIRM) {
             recargando = true;
             
-            Alert("NOS HAN CONCEDIDO LA RECARGA");
+            Alert("TIEFIGHTER: NOS HAN CONCEDIDO LA RECARGA");
         } else {
             recargando = false;
         }

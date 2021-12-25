@@ -93,7 +93,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     /*
     * @author Jaime
     */
-    private String password = "106-WING-8";
+    private String password = "106-WING-9";
     private String type = "Corellian";
     
     private int initX;
@@ -139,7 +139,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-        logger.offEcho();
+//        logger.offEcho();
 
         //this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
@@ -368,7 +368,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 Info("X: " + objetivoX + ", Y: " + objetivoY + ", Z: " + objetivoZ);
                 boolean lecturaCorrecta = myReadSensors();
                
-                if(myEnergy == 0){
+                if (myEnergy == 0){
                     Error("CORELLIAN SIN VIDA SE MURIO");
                     return Status.CHECKOUT;
                 }   
@@ -392,23 +392,21 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 
                 // Hasta que no barra todo el mapa
                 while(!(myGPS[0] == objetivoX &&   // X
-                        myGPS[1] == objetivoY )){   // y
+                        myGPS[1] == objetivoY )) { // y
                     
                     // Modo de actuar del agente
                     nextAction = myTakeDecision2();                    
                     
                     // Ejecuto la accion
                     if (!myExecuteAction(nextAction)) {
-                        Error("FALLO EN EL EXECUTE ACTION");
+                        Error("FALLO EN EL EXECUTE ACTION DENTRO DEL BUCLE");
                         return Status.CHECKOUT;
-                        
                     }
                     
                     // Observo el entorno y repito
                     if (!myReadSensors()) {
-                        Error("FALLO EN EL READ SENSORS");
+                        Error("FALLO EN EL READ SENSORS DENTRO DEL BUCLE");
                         return Status.CHECKOUT;
-                        
                     }
                     
                     Info("\n\n\n\n\n\n");
@@ -454,8 +452,18 @@ public class Practica3Corellian extends LARVAFirstAgent{
                     // Si toca capturar hacemos lo que se debe hacer
                     while(!estaSobreElSuelo()){
                         nextAction = "DOWN";
-                        myExecuteAction(nextAction);            // Ejecuto la accion
-                        myReadSensors();
+                                                
+                        // Ejecuto la accion
+                        if (!myExecuteAction(nextAction)) {
+                            Error("FALLO EN EL EXECUTE ACTION DE CAPTURE");
+                            return Status.CHECKOUT;
+                        }
+
+                        // Observo el entorno y repito
+                        if (!myReadSensors()) {
+                            Error("FALLO EN EL READ SENSORS DE CAPTURE");
+                            return Status.CHECKOUT;
+                        }
                     }  
                     
                     nextAction = "CAPTURE";
@@ -575,7 +583,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         open = this.LARVAblockingReceive();
         if (open.getPerformative() == ACLMessage.CONFIRM) {
             recargando = true;
-            
+            Alert("CORELLIAN: NOS HAN CONCEDIDO LA RECARGA");
         } else {
             recargando = false;
             Alert("NOS HAN DENEGADO LA RECARGA, LISTOS PARA MORIR");
@@ -607,7 +615,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     */  
     private String myTakeDecision2(){
         String nextAction = "";
-        Point p = new Point(objetivoX,objetivoY);
+        Point p = new Point(objetivoX, objetivoY);
         
         double alturaActual = myGPS[2];
         double [] gps = new double [] {

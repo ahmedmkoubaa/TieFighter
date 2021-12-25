@@ -30,7 +30,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     * @author Ahmed
     * @author Antonio
     */
-    private final String password = "106-WING-8";   // Alias de nuestra session
+    private final String password = "106-WING-9";   // Alias de nuestra session
     private int posAparicionX = 0;                  // Pos en la que aparecera el destroyer en X
     private int posAparicionY = 0;                  // Pos en la que aparecera el destroyer en Y
     
@@ -58,7 +58,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private ArrayList<String> corellians;
     private ArrayList<String> razors;
     
-    String service = "PManager", problem = "Fondor",
+    String service = "PManager", problem = "Erkit",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
@@ -117,6 +117,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private boolean [] corellianOcupado = {true, true};      // Verdadero hasta que no se haga inform
     private boolean [] fighterCancelado = {false, false};    // Aun no cancelados
     private boolean [] corellianCancelado = { false, false}; // Aun no cancelados
+    private boolean [] barridoListo = {false, false};        // Aun no esta listo el barrido
  
     
     /*
@@ -1526,13 +1527,29 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         /*
         * @author Ahmed
         */
+        // Comprobar que tieFighter han barrido todo su cuadrante
+        if (recorridoPrimerCuadrante.isEmpty() && !barridoListo[0]){
+            generarRecorridoMinimo(0);
+        }
+        
+        /*
+        * @author Ahmed
+        */
+        // Comprobar que tieFighter han barrido todo su cuadrante
+        if (recorridoSegundoCuadrante.isEmpty() && !barridoListo[1]){
+            generarRecorridoMinimo(1);
+        }
+        
+        
+        /*
+        * @author Ahmed
+        */
         // Si disponemos de corellians y los conocemos
         
         for (int i = 0; i < corellians.size(); i++) {
             
-            
             // Comprobar cada corellian y sus datos almacenados
-            if (!corellianOcupado[i] && !encontrados.get(i).isEmpty()){
+            if (barridoListo[i] && !corellianOcupado[i] && !encontrados.get(i).isEmpty()){
                 
                 corellianOcupado[i] = true;
                 outbox = new ACLMessage();
@@ -1617,6 +1634,91 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         }
     }
     
+    /*
+    *@author Ahmed
+    */
+    // Genera un recorrido minimo de coordenadas de jedis encontrados
+    // El index hace referencia a que pareja de tieFighters y corellian 
+    // queremos usar. Se obtiene el spawn point del corellian y se 
+    // implementa una heurisitica del vecino mas cercano
+    private void generarRecorridoMinimo(final int index) {
+        // Ya podemos elaborar la ruta mas corta 
+        // para capturar a todos los jedis 
+        // que se hayan encontrado, si es que se han encontrado
+        String [] coordenadas = spawnPointsCorellians.get(index).split(" ");
+        int x = Integer.parseInt(coordenadas[0]);
+        int y = Integer.parseInt(coordenadas[1]);
+        int z = Integer.parseInt(coordenadas[2]);
+        
+        // Generar punto inicial (punto de salida del corellian)
+        final Point puntoInicial = new Point(x, y);
+        ArrayList<Point> puntosEncontrados = new ArrayList<>();
+            
+        // Pasar puntos String a puntos Point
+        // Probar con 2 coordenadas, luego probaremos con 3
+        for (String s: encontrados.get(index)){
+            coordenadas = s.split(" ");
+            x = Integer.parseInt(coordenadas[0]);
+            y = Integer.parseInt(coordenadas[1]);
+            z = Integer.parseInt(coordenadas[2]);
+                
+            puntosEncontrados.add(new Point(x, y, z));
+        }
+            
+        Point minP, siguiente = puntoInicial;
+        double minDistancia;
+            
+        ArrayList<Point> puntosOrdenados = new ArrayList<>();
+            
+        // Mientras nos queden puntos encontrados por ordenar
+        while (!puntosEncontrados.isEmpty()) {
+                
+            // Distancias inciales de esta iteracion:
+            minDistancia = Double.MAX_VALUE;
+            minP = siguiente;
+                
+            // Recorro todos los puntos que quedan en puntos encontrados
+            // y calculo la distancia minima con el siguiente punto
+            for (Point p: puntosEncontrados) {
+                
+                if (siguiente.fastDistanceXYTo(p) < minDistancia) {
+                    minP = p;
+                    minDistancia = siguiente.fastDistanceXYTo(p);
+                }
+            }
+            
+            // Este punto ya se recorrio, se elimina
+            puntosEncontrados.remove(minP);
+            siguiente = minP;
+                
+            // Aniadir siguiente a la lista de ordenados
+            puntosOrdenados.add(siguiente);
+        }
+        
+        // Componer nueva lista de objetivos ordneados
+        encontrados.get(index).clear();
+        for (Point p: puntosOrdenados) {
+            encontrados.get(index).add(
+                    (int)p.getX() +  " " +
+                    (int)p.getY() +  " " +
+                    (int)p.getZ()
+            );
+        }
+        
+         // Ya he generado mi lista de puntos ordenados 
+        // para obtener el menor camino posible, ya puedo entonces
+        // pasarlos al vector de busqueda
+        Info("Este es el recorrido ordenado: " + puntosOrdenados + "\n" + 
+              "Estos son los encontrados: " + encontrados.get(index));
+        
+        // Barrido ya esta listo, se puede comenzar a capturar
+        barridoListo[index] = true;
+    }
+    
+    /*
+    *@author Ahmed
+    */
+    //
     private void actualizarTipoInform(final String content) {
         
         // Falso hasta que se demuestre lo contrario
