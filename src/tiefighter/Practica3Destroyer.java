@@ -30,7 +30,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     * @author Ahmed
     * @author Antonio
     */
-    private final String password = "106-WING-7";   // Alias de nuestra session
+    private final String password = "106-WING-8";   // Alias de nuestra session
     private int posAparicionX = 0;                  // Pos en la que aparecera el destroyer en X
     private int posAparicionY = 0;                  // Pos en la que aparecera el destroyer en Y
     
@@ -58,7 +58,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private ArrayList<String> corellians;
     private ArrayList<String> razors;
     
-    String service = "PManager", problem = "Ando",
+    String service = "PManager", problem = "Fondor",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
@@ -495,16 +495,16 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         int x, y, z;
         
         // Primer cuadrante o corellian
-        x = Integer.parseInt(recorridoPrimerCuadrante.get(0).split(" ")[0]) + 1;
-        y = Integer.parseInt(recorridoPrimerCuadrante.get(0).split(" ")[1]) + 1;
+        x = Integer.parseInt(recorridoPrimerCuadrante.get(0).split(" ")[0]) + 5;
+        y = Integer.parseInt(recorridoPrimerCuadrante.get(0).split(" ")[1]) + 5;
         z = alturaCorellian;
         
         spawnPointsCorellians.add(x + " " + y + " " + z);
         
         // Segundo cuadrante o corellian
         // Primer cuadrante o corellian
-        x = Integer.parseInt(recorridoSegundoCuadrante.get(0).split(" ")[0]) + 1;
-        y = Integer.parseInt(recorridoSegundoCuadrante.get(0).split(" ")[1]) + 1;
+        x = Integer.parseInt(recorridoSegundoCuadrante.get(0).split(" ")[0]) + 5;
+        y = Integer.parseInt(recorridoSegundoCuadrante.get(0).split(" ")[1]) + 5;
         z = alturaCorellian;
         
         spawnPointsCorellians.add(x + " " + y + " " + z);
@@ -1207,6 +1207,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     // control de recargas, en otro caso las deniega
     private void procesarSolicitudRecarga(){
         int index = -1;
+        
         // Crear respuesta y comprobar estado de recargas 
         // para discernir el resultado contenido
         outbox = inbox.createReply();
@@ -1247,6 +1248,10 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                 }
             }
         }
+        
+        // Sea cual sea el contenido 
+        // del mensaje debemos mandarlo
+        this.LARVAsend(outbox);
     }
     
     
@@ -1438,7 +1443,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                     
                     
 
-                    this.LARVAsend(outbox);
+                    
                     
                     
                     Info("HEMOS DADO RECARGA A " + inbox.getSender());

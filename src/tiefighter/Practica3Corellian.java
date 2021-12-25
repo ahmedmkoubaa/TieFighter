@@ -93,7 +93,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     /*
     * @author Jaime
     */
-    private String password = "106-WING-7";
+    private String password = "106-WING-8";
     private String type = "Corellian";
     
     private int initX;
@@ -139,7 +139,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-//        logger.offEcho();
+        logger.offEcho();
 
         //this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
