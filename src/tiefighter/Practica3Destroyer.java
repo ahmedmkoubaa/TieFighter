@@ -58,7 +58,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private ArrayList<String> corellians;
     private ArrayList<String> razors;
     
-    String service = "PManager", problem = "Bogano",
+    String service = "PManager", problem = "Ando",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
@@ -159,7 +159,8 @@ public class Practica3Destroyer extends LARVAFirstAgent{
 //                "ANGULAR",
 //                "THERMAL"     // No
             };
-    boolean step = true;
+    
+    boolean step = false;   // TEMPORAL
 
     @Override
     public void setup() {
@@ -508,35 +509,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         
         spawnPointsCorellians.add(x + " " + y + " " + z);
         
-        // Estamos suponiendo que siempre habran dos corellian y dos tie
-//        int numCorellians = corellians.size();
-//        
-//        // Dividimos el mapa en tantos cuadrantes como corellian haya
-//        int cuadranteHeight = height;
-//        int cuadranteWidth = width/numCorellians;
-        
-        // Queremos que cada agente aparezca en el centro de su cuadrante
-        // para ello vamos a calcular el punto medio de este y asignarlo
-        // como coordenadas, una vez hecho se aniadiran a una lista de estas
-//        int x, y, z, medio, inicio, fin;
-//        for (int i = 0; i < numCorellians; i++) {
-//            // Calculo de X
-//            inicio = cuadranteWidth * i;
-//            fin = cuadranteWidth * (i+1);
-//            
-//            medio = (fin + inicio) / 2;
-//            x = medio;
-//            
-//            // Calculo de y
-//            y = height / 2;
-//            
-//            // Calculo de z (viene previamente calculada)
-//            z = alturaCorellian;
-//            
-//            spawnPointsCorellians.add(x + " " + y + " " + z);
-//        }
-        
-//        Alert("Spawn points de corellians: " + spawnPointsCorellians);
+
     }
 /*
     * @author Antonio

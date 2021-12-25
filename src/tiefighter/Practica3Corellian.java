@@ -2,6 +2,7 @@ package tiefighter;
 
 import agents.LARVAFirstAgent;
 import geometry.Point;
+import geometry.Vector;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -100,9 +101,10 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 "GPS",     
 //                "LIDAR",
 //                "DISTANCE",
-                "ANGULAR",
+//                "ANGULAR",
             };
-    boolean step = true;
+    
+    boolean step = false;   // TEMPORAL
     
     /*
     * @author Jaime
@@ -537,6 +539,24 @@ public class Practica3Corellian extends LARVAFirstAgent{
     }
     
     /*
+    * @author Ahmed
+    */
+    // Metodo que devuelve el angulo del agente 
+    // con respecto a un punto P pasado. Es geometria
+    // pura y dura adaptada a Larva
+    private double myGetAngular(Point p) {
+        double [] getGPS = myDashboard.getGPS();
+        
+        Vector Norte = new Vector(new Point(0, 0), new Point(0, -10));
+        Point me = new Point(getGPS[0], getGPS[1], getGPS[2]);
+        Vector Busca = new Vector(me, p);
+        
+        int v = (int) Norte.angleXYTo(Busca);;
+        v = 360+90-v;   
+        return v%360;  
+    }
+    
+    /*
     * @author Jaime
     * @author Antonio
     * @author Ahmed
@@ -582,7 +602,8 @@ public class Practica3Corellian extends LARVAFirstAgent{
             // Si no estoy sobre el objetivo me desplazo
             if ( objetivoX != myDashboard.getGPS()[0] || objetivoY != myDashboard.getGPS()[1]){
 
-                final double angular = this.myDashboard.getAngular(p);
+//                final double angular = this.myDashboard.getAngular(p);
+                final double angular = myGetAngular(p);
 
                 double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
 
@@ -618,11 +639,6 @@ public class Practica3Corellian extends LARVAFirstAgent{
                     );
                     Info("\n\n\n\n\n\n");
 
-                    // Map level no funciona, siempre devuelve 0 al parecer, no tiene sentido
-                    // Porque si que le hemos pasado el mapa la verdad
-//                    alturaEnFrente = mapearAlturaSegunAngulo(compass, myDashboard.getLidar());
-
-
 
                     // Si nuestra altura es menor que la de enfrente, entonces tengo que subir
                     if (alturaActual < alturaEnFrente) {
@@ -634,61 +650,6 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 nextAction = "DOWN";
             }
         }
-        
-       
-        
-        /*// Si estoy a baja altura y no estoy sobre el objetivo
-        // entonces subire para estar a maxima altura
-        if (alturaActual < alturaCorellian && 
-               
-          (!(
-                myDashboard.getGPS()[0] == myX 
-                && myDashboard.getGPS()[1] == myY
-            )  
-            
-                || 
-                
-                alturaCorellian == myZ
-           ) ) {
-             nextAction = "UP";
-        } else {
-            
-            // Si estoy a una altura elevada sigo
-            // Si no estoy sobre el objetivo me desplazo
-            if ( myX != myDashboard.getGPS()[0] || myY != myDashboard.getGPS()[1]){
-                
-                final double angular = this.myDashboard.getAngular(p);
-                double miAltura = myDashboard.getGPS()[2];
-                double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
-        //        Info("\n\n\nDistanciaAngulo: " + distanciaAngulo);
-        //        Info("\n\n\n");
-        //        Info("\n\n\nAngular: " + angular);
-        //        Info("\n\n\n");
-        //        Info("\n\n\nCompass: " + compass);
-        //        Info("\n\n\n");
-                if( distanciaAngulo >= 45) {
-                    // Elegir distancia de giro minim
-                    if ( distanciaAngulo < gradoTotal/2 ) {
-                         nextAction = "LEFT";
-                         compass = (compass + 45 + gradoTotal) % gradoTotal;
-                    }
-                    else {
-                         nextAction = "RIGHT";
-                         compass = (compass - 45 + gradoTotal) % gradoTotal;
-                    }
-                }else{
-                    nextAction = "MOVE";
-                }
-                    
-            }
-            // Estoy sobre el objetivo y estoy muy alto
-            else {
-                // Bajo a capturar mi objetivo
-                nextAction = "DOWN";
-            }
-        }*/
-      
-       
         
         return nextAction;
     }

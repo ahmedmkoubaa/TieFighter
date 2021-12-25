@@ -2,6 +2,7 @@ package tiefighter;
 
 import agents.LARVAFirstAgent;
 import geometry.Point;
+import geometry.Vector;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
@@ -99,18 +100,20 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
             mySensors = new String[] {
 //                "ALIVE",
 //                "ONTARGET",   // No 
-                "GPS",        // No
-//                "COMPASS",
+                "GPS",        // si
+//                "COMPASS",  // SI
 //                "LIDAR",
 //                "ALTITUDE",   // No
 //                "VISUAL",     // No
-                "ENERGY",
+                "ENERGY",       // SI
 //                "PAYLOAD",
 //                "DISTANCE",
-                "ANGULAR",    // No
-                "THERMALHQ"
+//                "ANGULAR",    // SI
+                "THERMALHQ"     // SI
             };
-    boolean step = true;
+    
+    
+    boolean step = false; // TEMPORAL
     
     /*
     * @author Jaime
@@ -406,26 +409,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
 
         switch (open.getPerformative()) {
             case ACLMessage.REQUEST:
-                /*
-                * @author Ahmed
-                */
-                // La primera vez que despegamos damos una vuelta completa 
-                // para identificaar el entorno del jedi
-                if (despegando) {
-                    despegando = false;
-                    
-                    for (int angulo = 0; angulo < 360; angulo += 45) {
-                        String nextAction = "LEFT";
-                        
-                        // Si no podemos actuar o percibir el
-                        // entorno correctamente, salimos para evitar fallos
-                        if (!myExecuteAction(nextAction)) return Status.CHECKOUT;
-                        if (!myReadSensors()) return Status.CHECKOUT;
-                        
-                        buscarJedis();
-                        
-                    }
-                }   
+               
                 
                 // Obtenemos direccion objetivo
                 objetivoX = Integer.parseInt(open.getContent().split(" ")[1]);
@@ -440,10 +424,13 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                 outbox.setContent("");
                 this.LARVAsend(outbox);
                 
+                // Lectura adelantada de los sensores
+                if (!myReadSensors()) return Status.CHECKOUT;
                 
                 // Hasta que no barra todo el mapa
                 while (!(myDashboard.getGPS()[0] == objetivoX && 
-                        myDashboard.getGPS()[1] == objetivoY)) {
+                        myDashboard.getGPS()[1] == objetivoY  &&
+                        myDashboard.getGPS()[2] == objetivoZ)) {
                     
                     // Modo de actuar del agente
                     String nextAction = myTakeDecision2();
@@ -469,7 +456,31 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                     // Miramos a ver el thermal y si tenemos o no un Jedi detectado
                     buscarJedis();
 
-                }   
+                }
+                
+                
+                /*
+                * @author Ahmed
+                */
+                // La primera vez que despegamos damos una vuelta completa 
+                // para identificaar el entorno del jedi. Por convenio, el primer
+                // request hace moverse solo en la Z, hacia arriba, una vez estemos
+                // arriba del todo, entonces giramos sobre nosotros 
+                if (despegando) {
+                    despegando = false;
+                    
+                    for (int angulo = 0; angulo < 360; angulo += 45) {
+                        String nextAction = "LEFT";
+                        
+                        // Si no podemos actuar o percibir el
+                        // entorno correctamente, salimos para evitar fallos
+                        if (!myExecuteAction(nextAction)) return Status.CHECKOUT;
+                        if (!myReadSensors()) return Status.CHECKOUT;
+                        
+                        buscarJedis();
+                        
+                    }
+                }
                 
                 /*
                 @author Antonio
@@ -593,6 +604,25 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     }
     
     
+    /*
+    * @author Ahmed
+    */
+    // Metodo que devuelve el angulo del agente 
+    // con respecto a un punto P pasado. Neccesita 
+    // tener actualizado el valor del GPS. 
+    // Es geometria pura y dura adaptada a Larva
+    private double myGetAngular(Point p) {
+        double [] getGPS = myDashboard.getGPS();
+        
+        Vector Norte = new Vector(new Point(0, 0), new Point(0, -10));
+        Point me = new Point(getGPS[0], getGPS[1], getGPS[2]);
+        Vector Busca = new Vector(me, p);
+        
+        int v = (int) Norte.angleXYTo(Busca);;
+        v = 360+90-v;   
+        return v%360;  
+    }
+    
     /* 
     * @author Jaime
     * @author Antonio
@@ -633,7 +663,9 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
             double alturaActual = myDashboard.getGPS()[2];
         
             if(alturaActual == alturaTie){
-                final double angular = this.myDashboard.getAngular(p);
+//                final double angular = this.myDashboard.getAngular(p);
+                final double angular = myGetAngular(p);
+                
                 double miAltura = myDashboard.getGPS()[2];
 
                 double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
