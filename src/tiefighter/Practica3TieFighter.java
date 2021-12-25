@@ -106,6 +106,12 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                 "MOVE"
             } ;
     
+    /*
+    * @author Ahmed
+    */
+    // Emular GPS
+    private double [] myGPS;
+    
     private String map;
     
     private double alturaTie;
@@ -119,7 +125,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
             mySensors = new String[] {
 //                "ALIVE",
 //                "ONTARGET",   // No 
-                "GPS",        // si
+//                "GPS",        // si
 //                "COMPASS",  // SI
 //                "LIDAR",  // SI
 //                "ALTITUDE",   // No
@@ -235,6 +241,14 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         initY = Integer.parseInt(open.getContent().split(" ")[1]);
         myAngular = 0;
         Info("X: " + initX + ", Y: " + initY);
+        
+        // Inicializar el GPS
+        myGPS = new double [] {
+            initX,                                  // X de Spawn
+            initY,                                  // Y de Spawn
+            myDashboard.getMapLevel(initX, initY)   // Z calculada de Spawn
+        };
+        
         
         return Status.COMISSIONING;
     }
@@ -404,8 +418,8 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                     posJ = j;
 
                     // Sumamos ademas ahora el GPS
-                    jediXReal = jediX + myDashboard.getGPS()[0];
-                    jediYReal = jediY + myDashboard.getGPS()[1];
+                    jediXReal = jediX + myGPS[0];
+                    jediYReal = jediY + myGPS[1];
                     
                     // Notificar que se encontro un jedi
                     notificarJediEncontrado(jediXReal, jediYReal);
@@ -447,9 +461,9 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                 if (!myReadSensors()) return Status.CHECKOUT;
                 
                 // Hasta que no barra todo el mapa
-                while (!(myDashboard.getGPS()[0] == objetivoX && 
-                        myDashboard.getGPS()[1] == objetivoY  &&
-                        myDashboard.getGPS()[2] == objetivoZ)) {
+                while (!(myGPS[0] == objetivoX && 
+                        myGPS[1] == objetivoY  &&
+                        myGPS[2] == objetivoZ)) {
                     
                     // Modo de actuar del agente
                     String nextAction = myTakeDecision2();
@@ -470,6 +484,14 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                     Info("MY ENERGY ES: " + myEnergy);
                     Info("LIMITE ES: " +  umbralLimiteRecarga);
                     Info("\n\n\n\n\n\n");
+                    Info("myGPS: " + 
+                            myGPS[0] + " " + 
+                            myGPS[1] + " " + 
+                            myGPS[2]
+                    );
+                    
+                    Info("\n\n\n\n\n\n");
+                    
 
                     // Despues de actualizar los sensores en la posicion actual
                     // Miramos a ver el thermal y si tenemos o no un Jedi detectado
@@ -580,10 +602,10 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     // entonces esta posado sobre al suelo (a nivel del suelo)
     private boolean estaSobreElSuelo() {
         return (
-            myDashboard.getGPS()[2] ==                 // Altura en Z
+            myGPS[2] ==                 // Altura en Z
             myDashboard.getMapLevel(                   // Map level
-                (int) myDashboard.getGPS()[0],     // Coordenada X
-                (int) myDashboard.getGPS()[1]      // Coordenada Y
+                (int) myGPS[0],     // Coordenada X
+                (int) myGPS[1]      // Coordenada Y
             ));
     }
     
@@ -631,7 +653,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     // tener actualizado el valor del GPS. 
     // Es geometria pura y dura adaptada a Larva
     private double myGetAngular(Point p) {
-        double [] getGPS = myDashboard.getGPS();
+        double [] getGPS = myGPS;
         
         Vector Norte = new Vector(new Point(0, 0), new Point(0, -10));
         Point me = new Point(getGPS[0], getGPS[1], getGPS[2]);
@@ -679,13 +701,13 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         } else {
             
             alturaTie = objetivoZ; //aqui recibe la que le diga el destroyer
-            double alturaActual = myDashboard.getGPS()[2];
+            double alturaActual = myGPS[2];
         
             if(alturaActual == alturaTie){
 //                final double angular = this.myDashboard.getAngular(p);
                 final double angular = myGetAngular(p);
                 
-                double miAltura = myDashboard.getGPS()[2];
+                double miAltura = myGPS[2];
 
                 double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
         //        Info("\n\n\nDistanciaAngulo: " + distanciaAngulo);
@@ -867,35 +889,65 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         
         if (inbox.getPerformative() == ACLMessage.INFORM) {
             
-            /*
-            * @author Ahmed
-            */
-            // ACTUALIZAR ENERGIA COMO ES DEBIDO
-            if (accion.equals("RECHARGE")) {
-                myEnergy = maxEnergy;
-                Info("ENERGIA RECARGADA COMPLETAMENTE");
-            }
-            else {
-                
-                // En otro caso, tenemos que identificar cual fue 
-                // la accion que se llevo a cabo y si es necesario
-                // actualizar la energia o no
-                
-               
-
-                // Busca y actualiza
-                for (String s: accionesCobrables) {
-                    if (s.equals(accion)) {
-                        myEnergy -= costeAccion;
-                        break;
-                    }
-                }
-            }
+            // Actualizar sensor de energia emulado
+            actualizarSensorEnergy(accion);
+            
+            
+            // Actualizar GPS emulado
+            actualizarSensorGPS(accion);
             
             return true;
         } else {
             Info("MyExecuteAction: " + content);
             return false;
         }        
+    }
+    
+    /*
+    * @author Ahmed
+    */
+    // Actualizar sensor de energia en base a la accion que se ejecuta
+    private void actualizarSensorEnergy(String accion){
+        
+        // ACTUALIZAR ENERGIA COMO ES DEBIDO
+        if (accion.equals("RECHARGE")) {
+            myEnergy = maxEnergy;
+            Info("ENERGIA RECARGADA COMPLETAMENTE");
+        }
+        else {
+                
+            // En otro caso, tenemos que identificar cual fue 
+            // la accion que se llevo a cabo y si es necesario
+            // actualizar la energia o no
+                
+               
+
+            // Busca y actualiza
+            for (String s: accionesCobrables) {
+                if (s.equals(accion)) {
+                    myEnergy -= costeAccion;
+                    break;
+                }
+            }
+        }
+    }
+    
+    /*
+    * @author Ahmed
+    */
+    // Actualiza sensor GPS en base a accion para emularlo
+    private void actualizarSensorGPS(String accion) {
+        if (accion.equals("MOVE")) {
+            double [] res = casillaEnfrente(compass, myGPS);
+            myGPS = res;
+                    
+        } else if (accion.equals("UP")) {
+            myGPS[2] += 5;
+            
+        } else if (accion.equals("DOWN")) {
+            myGPS[2] -= 5;
+        } else {
+            Info("NADA QUE ACTUALIZAR: " + accion);
+        }
     }
 }

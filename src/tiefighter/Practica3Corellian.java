@@ -85,6 +85,12 @@ public class Practica3Corellian extends LARVAFirstAgent{
             } ;
     
     /*
+    * @author Ahmed
+    */
+    // Emular GPS
+    private double [] myGPS;
+    
+    /*
     * @author Jaime
     */
     private String password = "106-WING-7";
@@ -117,7 +123,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
             mySensors = new String[] {
 //                "ALIVE", 
 //                "ENERGY",
-                "GPS",     
+//                "GPS",     
 //                "LIDAR",
 //                "DISTANCE",
 //                "ANGULAR",
@@ -133,7 +139,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-        logger.offEcho();
+//        logger.offEcho();
 
         //this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
@@ -225,6 +231,13 @@ public class Practica3Corellian extends LARVAFirstAgent{
         initY = Integer.parseInt(open.getContent().split(" ")[1]);
         myAngular = 0;
         Info("X: " + initX + ", Y: " + initY);
+        
+        // Inicializar el GPS
+        myGPS = new double [] {
+            initX,                                  // X de Spawn
+            initY,                                  // Y de Spawn
+            myDashboard.getMapLevel(initX, initY)   // Z calculada de Spawn
+        };
         
         return Status.COMISSIONING;
     }
@@ -378,17 +391,11 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 }
                 
                 // Hasta que no barra todo el mapa
-                while(!(myDashboard.getGPS()[0] == objetivoX &&   // X
-                        myDashboard.getGPS()[1] == objetivoY )){   // Z
+                while(!(myGPS[0] == objetivoX &&   // X
+                        myGPS[1] == objetivoY )){   // y
                     
                     // Modo de actuar del agente
-                    nextAction = myTakeDecision2();
-                    
-                    Info("\n\n\n\n\n\n");
-                    Info("MY ENERGY ES: " + myEnergy);
-                    Info("LIMITE ES: " +  umbralLimiteRecarga);
-                    Info("\n\n\n\n\n\n");
-                    
+                    nextAction = myTakeDecision2();                    
                     
                     // Ejecuto la accion
                     if (!myExecuteAction(nextAction)) {
@@ -403,9 +410,27 @@ public class Practica3Corellian extends LARVAFirstAgent{
                         return Status.CHECKOUT;
                         
                     }
+                    
+                    Info("\n\n\n\n\n\n");
+                    Info("MY ENERGY ES: " + myEnergy);
+                    Info("LIMITE ES: " +  umbralLimiteRecarga);
+                    Info("\n\n\n\n\n\n");
+                    Info("GPS: " + 
+                            myGPS[0] + " " + 
+                            myGPS[1] + " " + 
+                            myGPS[2]
+                    );
+                    
+                    Info("myGPS: " + 
+                            myGPS[0] + " " + 
+                            myGPS[1] + " " + 
+                            myGPS[2]
+                    );
+                    
+                    Info("\n\n\n\n\n\n");
                 }
                 
-                // Info("POSICION FINAL: X: " + myDashboard.getGPS()[0] + ", Y: " + myDashboard.getGPS()[1] + ", Z: " + myDashboard.getGPS()[2]);
+                // Info("POSICION FINAL: X: " + myGPS[0] + ", Y: " + myGPS[1] + ", Z: " + myGPS[2]);
                 
                 
                 // Informar que nos hemos movido adecuadamente
@@ -515,10 +540,10 @@ public class Practica3Corellian extends LARVAFirstAgent{
     // entonces esta posado sobre al suelo (a nivel del suelo)
     private boolean estaSobreElSuelo() {
         return (
-            myDashboard.getGPS()[2] ==                 // Altura en Z
+            myGPS[2] ==                 // Altura en Z
             myDashboard.getMapLevel(                   // Map level
-                (int) myDashboard.getGPS()[0],     // Coordenada X
-                (int) myDashboard.getGPS()[1]      // Coordenada Y
+                (int) myGPS[0],     // Coordenada X
+                (int) myGPS[1]      // Coordenada Y
             ));
     }
     
@@ -564,10 +589,10 @@ public class Practica3Corellian extends LARVAFirstAgent{
     // con respecto a un punto P pasado. Es geometria
     // pura y dura adaptada a Larva
     private double myGetAngular(Point p) {
-        double [] getGPS = myDashboard.getGPS();
+        double [] getGPS = myGPS;
         
         Vector Norte = new Vector(new Point(0, 0), new Point(0, -10));
-        Point me = new Point(getGPS[0], getGPS[1], getGPS[2]);
+        Point me = new Point(myGPS[0], myGPS[1], myGPS[2]);
         Vector Busca = new Vector(me, p);
         
         int v = (int) Norte.angleXYTo(Busca);;
@@ -584,8 +609,10 @@ public class Practica3Corellian extends LARVAFirstAgent{
         String nextAction = "";
         Point p = new Point(objetivoX,objetivoY);
         
-        double alturaActual = myDashboard.getGPS()[2];
-        double [] gps = myDashboard.getGPS();
+        double alturaActual = myGPS[2];
+        double [] gps = new double [] {
+            myGPS[0], myGPS[1], myGPS[2]
+        };
         
         if (!recargaPedida && myEnergy < umbralLimiteRecarga) {
             pedirRecarga();
@@ -619,7 +646,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         
             // Si estoy a una altura elevada sigo
             // Si no estoy sobre el objetivo me desplazo
-            if ( objetivoX != myDashboard.getGPS()[0] || objetivoY != myDashboard.getGPS()[1]){
+            if ( objetivoX != myGPS[0] || objetivoY != myGPS[1]){
 
 //                final double angular = this.myDashboard.getAngular(p);
                 final double angular = myGetAngular(p);
@@ -706,7 +733,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
                         
                         final int compass = this.myDashboard.getCompass();
                         final double angular = this.myDashboard.getAngular();
-                        double miAltura = myDashboard.getGPS()[2];
+                        double miAltura = myGPS[2];
 
                         // ------------------------------------------------------------------- //
                         /* NUEVO AHMED: 
@@ -736,7 +763,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
                             int alturaEnfrente = mapearAlturaSegunAngulo(compass, lidar);
 
                             // Si enfrente es mas alto que dron hay que subir
-                            if (alturaEnfrente < 0 || estaCasillaProhibida(casillaEnfrente(compass, myDashboard.getGPS()))){
+                            if (alturaEnfrente < 0 || estaCasillaProhibida(casillaEnfrente(compass, myGPS))){
 
                                 // ------------------------------------------------------------------- //
                                 /* NUEVO AHMED: 
@@ -747,14 +774,14 @@ public class Practica3Corellian extends LARVAFirstAgent{
                                     lo que se nos queda a la izquierda y vicecersa. 
                                     Cualquier sentido de giro es valido.
                                 */
-                                if(estaCasillaProhibida(casillaEnfrente(compass, myDashboard.getGPS()))){
+                                if(estaCasillaProhibida(casillaEnfrente(compass, myGPS))){
                                     nextAction = "LEFT";
                                     evitandoDerecha = true;
                                 }else if (miAltura == maxFlight) {
                                     nextAction = "LEFT";
                                     evitandoDerecha = true;
-                                    if(!estaCasillaProhibida(myDashboard.getGPS())){
-                                        casillasProhibidas.add(myDashboard.getGPS());
+                                    if(!estaCasillaProhibida(myGPS)){
+                                        casillasProhibidas.add(myGPS);
                                     }
                                 } else {
                                     nextAction = "UP";
@@ -943,33 +970,64 @@ public class Practica3Corellian extends LARVAFirstAgent{
         
         if (inbox.getPerformative() == ACLMessage.INFORM) {
             
-            /*
-            * @author Ahmed
-            */
-            // ACTUALIZAR ENERGIA COMO ES DEBIDO
-            if (accion.equals("RECHARGE")) {
-                myEnergy = maxEnergy;
-                Info("ENERGIA RECARGADA COMPLETAMENTE");
-            }
-            else {
-                
-                // En otro caso, tenemos que identificar cual fue 
-                // la accion que se llevo a cabo y si es necesario
-                // actualizar la energia o no
-
-                // Busca y actualiza
-                for (String s: accionesCobrables) {
-                    if (s.equals(accion)) {
-                        myEnergy -= costeAccion;
-                        break;
-                    }
-                }
-            }
+            // Actualizar sensor de energia emulado
+            actualizarSensorEnergy(accion);
+            
+            
+            // Actualizar GPS emulado
+            actualizarSensorGPS(accion);
             
             return true;
         } else {
             Info("MyExecuteAction: " + content);
             return false;
         }        
+    }
+    
+    
+    /*
+    * @author Ahmed
+    */
+    // Actualizar sensor de energia para tenerlo emulado
+    private void actualizarSensorEnergy(String accion){
+        
+        // ACTUALIZAR ENERGIA COMO ES DEBIDO
+        if (accion.equals("RECHARGE")) {
+            myEnergy = maxEnergy;
+            Info("ENERGIA RECARGADA COMPLETAMENTE");
+        }
+        else {
+                
+            // En otro caso, tenemos que identificar cual fue 
+            // la accion que se llevo a cabo y si es necesario
+            // actualizar la energia o no
+
+            // Busca y actualiza
+            for (String s: accionesCobrables) {
+                if (s.equals(accion)) {
+                    myEnergy -= costeAccion;
+                    break;
+                }
+            }
+        }
+    }
+    
+    /*
+    * @author Ahmed
+    */
+    // Actualiza sensor GPS en base a accion para emularlo
+    private void actualizarSensorGPS(String accion) {
+        if (accion.equals("MOVE")) {
+            double [] res = casillaEnfrente(compass, myGPS);
+            myGPS = res;
+                    
+        } else if (accion.equals("UP")) {
+            myGPS[2] += 5;
+            
+        } else if (accion.equals("DOWN")) {
+            myGPS[2] -= 5;
+        } else {
+            Info("NADA QUE ACTUALIZAR: " + accion);
+        }
     }
 }
