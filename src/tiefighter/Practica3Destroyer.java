@@ -30,7 +30,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     * @author Ahmed
     * @author Antonio
     */
-    private final String password = "106-WING-12";   // Alias de nuestra session
+    private final String password = "106-WING-14";   // Alias de nuestra session
     private int posAparicionX = 0;                  // Pos en la que aparecera el destroyer en X
     private int posAparicionY = 0;                  // Pos en la que aparecera el destroyer en Y
     
@@ -58,7 +58,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private ArrayList<String> corellians;
     private ArrayList<String> razors;
     
-    String service = "PManager", problem = "Fondor",
+    String service = "PManager", problem = "Ando",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
@@ -168,7 +168,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-        logger.offEcho();
+//        logger.offEcho();
         
 //        this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
@@ -409,7 +409,6 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     * @author Antonio
     * @author Ahmed
     */
-    
     // El agente asciende volando hasta arriba mientras lo permita
     // la altura maxima de vuelo permitida por el mapa
     private void goToMaxFlight(){ 
@@ -740,7 +739,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             inbox = this.LARVAblockingReceive();
             
             // Si es un agree, entonces 
-            if (inbox.getPerformative() == ACLMessage.AGREE) {
+                if (inbox.getPerformative() == ACLMessage.AGREE) {
                 
                 Info("Recibiendo AGREE y mandando ACCEPT_PROPOSAL de " + inbox.getSender());
                 
@@ -768,14 +767,27 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                     } else if (index == 1) {
                         spawnPos = recorridoSegundoCuadrante.get(0);
                     } else {
-                        Error("TIEFIGHTER NO ESPERADO");    
+                        Error("TIEFIGHTER NO ESPERADO " + index);    
                     }
                     
-                } else {
+                }
+                
+                // Comprobar Corellians
+                if (index < 0) {
                     index = corellians.indexOf(sender);
-                    
                     if (index >= 0) spawnPos = spawnPointsCorellians.get(index);
-                    else Error("AGENTE NO CORELLIAN O NO REGISTRADO: " + inbox.getSender());
+                }
+                
+                // Comprobar razor (solo puede haber uno en realidad
+
+                if (index < 0) {
+                    index = razors.indexOf(sender);
+                    spawnPos = "1 1";
+                }
+                
+                // Si llegados a este punto, no reconocemos el agente
+                if (index < 0) {
+                    Error("AGENTE NO CORELLIAN O NO REGISTRADO: " + inbox.getSender());
                 }
                 
                 outbox = inbox.createReply();
@@ -1603,16 +1615,19 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         // Condicion de seguida o parada
         
         // Comprobar que estan todos los agentes cancelados
-        boolean todosCancelados = 
+        boolean fightersyYCorelliansCancelados = 
                 fighterCancelado[0] 
                 && fighterCancelado[1] 
                 && corellianCancelado[0] 
                 && corellianCancelado[1];
         
-        if (todosCancelados) {
+        if (fightersyYCorelliansCancelados) {
             // En caso de que hayamos cancelado todos los agentes, 
             // vamos a esperar a que todos esten fuera para 
             // cerar el problema abierto
+            
+            Info("NOS VAMOS");
+            if (!razors.isEmpty()) cancelarRazors();
             
             boolean canceladosExitosamente = false;
             while (!canceladosExitosamente) {
@@ -1633,6 +1648,31 @@ public class Practica3Destroyer extends LARVAFirstAgent{
             return Status.SOLVEPROBLEM;
         }
     }
+    
+    /*
+    *@author Ahmed
+    */
+    // Cancelar todos los razors restantes
+    private void cancelarRazors() {
+        Info("TOCA CANCELAR RAZORS");
+        
+        // Ahora cancelamos el corellian
+        // Vamos a enviar un nuevo mensaje
+        outbox = new ACLMessage(ACLMessage.CFP);
+        outbox.setSender(getAID());
+            
+        for (String s : razors) {
+            outbox.addReceiver(new AID(s, AID.ISLOCALNAME));
+        }
+
+        // toca hacer CANCEL PORQUE YA NO HAYs MAS
+        outbox.setPerformative(ACLMessage.CANCEL);
+        outbox.setOntology("COMMITMENT");
+        outbox.setConversationId(sessionKey); 
+        outbox.setContent("CANCEL CREW " + password);
+        
+        this.LARVAsend(outbox);
+    }    
     
     /*
     *@author Ahmed

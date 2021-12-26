@@ -93,7 +93,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     /*
     * @author Jaime
     */
-    private String password = "106-WING-12";
+    private String password = "106-WING-14";
     private String type = "Corellian";
     
     private int initX;

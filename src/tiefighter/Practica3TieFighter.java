@@ -70,7 +70,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     /*
     * @author Jaime
     */
-    private String password = "106-WING-12";
+    private String password = "106-WING-14";
     
     private int initX;
     private int initY;
