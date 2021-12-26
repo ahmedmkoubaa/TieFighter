@@ -93,7 +93,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     /*
     * @author Jaime
     */
-    private String password = "106-WING-9";
+    private String password = "106-WING-12";
     private String type = "Corellian";
     
     private int initX;
@@ -139,7 +139,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-        //logger.offEcho();
+        logger.offEcho();
 
         //this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
@@ -250,7 +250,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         outbox.setContent("Cancel session " + sessionKey);
         Info("Closing problem Helloworld, session " + sessionKey);
         this.LARVAsend(outbox);
-        open = LARVAblockingReceive();
+        open = this.LARVAblockingReceive();
         Info(problemManager + " says: " + open.getContent());
         return Status.CHECKOUT;
     }
@@ -368,7 +368,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
                 Info("X: " + objetivoX + ", Y: " + objetivoY + ", Z: " + objetivoZ);
                 boolean lecturaCorrecta = myReadSensors();
                
-                if (myEnergy == 0){
+                if (myEnergy <= 0) {
                     Error("CORELLIAN SIN VIDA SE MURIO");
                     return Status.CHECKOUT;
                 }   
@@ -972,7 +972,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         this.LARVAsend(outbox);
         Info("Request executing action " + accion + " to " + sessionManager);
         
-        inbox = LARVAblockingReceive();
+        inbox = this.LARVAblockingReceive();
         Info(sessionManager + " says: " + inbox.getContent());
         content = inbox.getContent();
         

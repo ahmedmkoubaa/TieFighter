@@ -12,6 +12,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 //import swing.LARVACompactDash;
 import swing.LARVADash;
+import swing.LARVAMiniDash;
 
 
 /*
@@ -69,7 +70,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     /*
     * @author Jaime
     */
-    private String password = "106-WING-9";
+    private String password = "106-WING-12";
     
     private int initX;
     private int initY;
@@ -163,6 +164,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         //this.myDashboard = new LARVADash(LARVADash.Layout.DASHBOARD, this);
         this.myDashboard = new LARVADash(this);
         //doActivateLARVADash();
+
     }
 
     /*
@@ -231,7 +233,8 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     public Status MyWait() {
         open = this.LARVAblockingReceive();
         sessionKey = open.getConversationId();
-        map = open.getContent().split(" ")[1];
+        
+        
         outbox = open.createReply();
         outbox.setPerformative(ACLMessage.AGREE);
         outbox.setConversationId(sessionKey);
@@ -239,16 +242,33 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         outbox.setContent("");
         this.LARVAsend(outbox);
         
+        /*
         myDashboard.getMapLevel(1, 1);
         try {
             TimeUnit.SECONDS.sleep(3);
         } catch (InterruptedException ex) {
             Logger.getLogger(Practica3TieFighter.class.getName()).log(Level.SEVERE, null, ex);
         }
+        */
+        
         
         open = this.LARVAblockingReceive();
         initX = Integer.parseInt(open.getContent().split(" ")[0]);
         initY = Integer.parseInt(open.getContent().split(" ")[1]);
+        int initZ = myDashboard.getMapLevel(initX, initY);
+        
+        maxFlight = 255;
+        int cont = 0;
+        int max = 150;
+        
+        while (initZ < 0 || initZ > maxFlight && (cont <= max)) {
+            initZ = myDashboard.getMapLevel(initX, initY);
+            Info("Esperando: " + initZ);
+            cont++;
+        }
+        
+        if (cont > max) Error("ERROR AL OBTENER EL MAPA");
+        
         myAngular = 0;
         Info("X: " + initX + ", Y: " + initY);
         
@@ -256,8 +276,9 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         myGPS = new double [] {
             initX,                                  // X de Spawn
             initY,                                  // Y de Spawn
-            myDashboard.getMapLevel(initX, initY)   // Z calculada de Spawn
+            initZ   // Z calculada de Spawn
         };
+        
         Info("MYGPD: " + myGPS[0] + ", " + myGPS[1] + ", " + myGPS[2]);
         
         return Status.COMISSIONING;
@@ -271,7 +292,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         outbox.setContent("Cancel session " + sessionKey);
         Info("Closing problem Helloworld, session " + sessionKey);
         this.LARVAsend(outbox);
-        open = LARVAblockingReceive();
+        open = this.LARVAblockingReceive();
         Info(problemManager + " says: " + open.getContent());
         return Status.CHECKOUT;
     }
@@ -497,7 +518,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                     }
                     
                     // Si no tenemos energia tambien nos detenemos
-                    if (myEnergy == 0) {
+                    if (myEnergy <= 0) {
                         Error("FALLO: NOS HEMOS QUEDADO SIN ENERGIA");
                         return Status.CHECKOUT;
                     }
@@ -888,7 +909,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         // Comprobar que la lectura fuese correcta
         if(inbox.getPerformative() == ACLMessage.REFUSE 
                 || inbox.getPerformative() == ACLMessage.FAILURE) {
-            Info(content);
+            Error(content);
             return false;
         }
         
@@ -912,7 +933,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         this.LARVAsend(outbox);
         Info("Request executing action " + accion + " to " + sessionManager);
         
-        inbox = LARVAblockingReceive();
+        inbox = this.LARVAblockingReceive();
         Info(sessionManager + " says: " + inbox.getContent());
         content = inbox.getContent();
         

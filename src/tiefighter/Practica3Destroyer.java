@@ -30,7 +30,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     * @author Ahmed
     * @author Antonio
     */
-    private final String password = "106-WING-9";   // Alias de nuestra session
+    private final String password = "106-WING-12";   // Alias de nuestra session
     private int posAparicionX = 0;                  // Pos en la que aparecera el destroyer en X
     private int posAparicionY = 0;                  // Pos en la que aparecera el destroyer en Y
     
@@ -117,7 +117,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private boolean [] corellianOcupado = {true, true};      // Verdadero hasta que no se haga inform
     private boolean [] fighterCancelado = {false, false};    // Aun no cancelados
     private boolean [] corellianCancelado = { false, false}; // Aun no cancelados
-    private boolean [] barridoListo = {true, true};        // Aun no esta listo el barrido
+    private boolean [] barridoListo = {false, false};        // Aun no esta listo el barrido
  
     
     /*
