@@ -7,6 +7,9 @@ import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import java.util.ArrayList;
+import java.util.concurrent.TimeUnit;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 //import swing.LARVACompactDash;
 import swing.LARVADash;
 
@@ -226,7 +229,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     * @author Jaime
     */
     public Status MyWait() {
-        open = LARVAblockingReceive();
+        open = this.LARVAblockingReceive();
         sessionKey = open.getConversationId();
         map = open.getContent().split(" ")[1];
         outbox = open.createReply();
@@ -235,6 +238,13 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
         outbox.setInReplyTo("Recruit crew for session " + password);
         outbox.setContent("");
         this.LARVAsend(outbox);
+        
+        myDashboard.getMapLevel(1, 1);
+        try {
+            TimeUnit.SECONDS.sleep(3);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(Practica3TieFighter.class.getName()).log(Level.SEVERE, null, ex);
+        }
         
         open = this.LARVAblockingReceive();
         initX = Integer.parseInt(open.getContent().split(" ")[0]);
@@ -248,7 +258,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
             initY,                                  // Y de Spawn
             myDashboard.getMapLevel(initX, initY)   // Z calculada de Spawn
         };
-        
+        Info("MYGPD: " + myGPS[0] + ", " + myGPS[1] + ", " + myGPS[2]);
         
         return Status.COMISSIONING;
     }
@@ -755,6 +765,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                     nextAction = "UP";
                 }
                 else if(alturaActual > alturaTie){
+                    Info("HAGO DOWN: " + alturaActual + ", " + alturaTie);
                     nextAction = "DOWN";
                 }
             } 

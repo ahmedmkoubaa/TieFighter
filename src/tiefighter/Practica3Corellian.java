@@ -139,7 +139,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
         super.setup();
         logger.onOverwrite();
         logger.setLoggerFileName("mylog.json");
-//        logger.offEcho();
+        //logger.offEcho();
 
         //this.enableDeepLARVAMonitoring();
         Info("Setup and configure agent");
@@ -216,7 +216,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     * @author Ahmed
     */
     public Status MyWait() {
-        open = LARVAblockingReceive();
+        open = this.LARVAblockingReceive();
         sessionKey = open.getConversationId();
         map = open.getContent();
         outbox = open.createReply();

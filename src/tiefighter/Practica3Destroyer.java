@@ -58,7 +58,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private ArrayList<String> corellians;
     private ArrayList<String> razors;
     
-    String service = "PManager", problem = "Erkit",
+    String service = "PManager", problem = "Fondor",
             problemManager = "", content, sessionKey, 
             sessionManager, storeManager, sensorKeys;
     
@@ -117,7 +117,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
     private boolean [] corellianOcupado = {true, true};      // Verdadero hasta que no se haga inform
     private boolean [] fighterCancelado = {false, false};    // Aun no cancelados
     private boolean [] corellianCancelado = { false, false}; // Aun no cancelados
-    private boolean [] barridoListo = {false, false};        // Aun no esta listo el barrido
+    private boolean [] barridoListo = {true, true};        // Aun no esta listo el barrido
  
     
     /*
@@ -1562,7 +1562,7 @@ public class Practica3Destroyer extends LARVAFirstAgent{
                 outbox.setOntology("COMMITMENT");
                 outbox.setConversationId(sessionKey);
                 
-//                Alert("CORELLIAN ENVIADO A CAPTURAR");
+                //Alert("CORELLIAN ENVIADO A CAPTURAR");
 
                 // Realizar envio de mensaje
                 this.LARVAsend(outbox);
