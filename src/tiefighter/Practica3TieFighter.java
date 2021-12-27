@@ -18,7 +18,7 @@ import swing.LARVAMiniDash;
 /*
 * @author Jaime
 */
-
+// Clase correspondiente al Tie Fighter
 public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
 
 
@@ -70,6 +70,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     /*
     * @author Jaime
     */
+    // Variables de entorno del Fighter
     private String password = "106-WING-14";
     
     private int initX;
@@ -147,6 +148,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     /*
     * @author Jaime
     */
+    // Setup del Figther
     @Override
     public void setup() {
         super.setup();
@@ -170,6 +172,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     /*
     * @author Jaime
     */
+    // Secuencia de estados correspondiente al Figther
     @Override
     public void Execute() {
         Info("Status: " + mystatus.name());
@@ -213,6 +216,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     /*
     * @author Jaime
     */
+    // Checkin del Fighter
     public Status MyCheckin() {
         Info("Loading passport and checking-in to LARVA");
         if (!loadMyPassport("passport/MyPassport.passport")) {
@@ -230,27 +234,17 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     /*
     * @author Jaime
     */
+    // Metodo para esperar a que el Destroyer nos mande el CFP
     public Status MyWait() {
         open = this.LARVAblockingReceive();
         sessionKey = open.getConversationId();
-        
         
         outbox = open.createReply();
         outbox.setPerformative(ACLMessage.AGREE);
         outbox.setConversationId(sessionKey);
         outbox.setInReplyTo("Recruit crew for session " + password);
         outbox.setContent("");
-        this.LARVAsend(outbox);
-        
-        /*
-        myDashboard.getMapLevel(1, 1);
-        try {
-            TimeUnit.SECONDS.sleep(3);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(Practica3TieFighter.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        */
-        
+        this.LARVAsend(outbox);     
         
         open = this.LARVAblockingReceive();
         initX = Integer.parseInt(open.getContent().split(" ")[0]);
@@ -287,6 +281,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     /*
     * @author Jaime
     */
+    // Metodo para cerrar el problema
     public Status MyCloseProblem() {
         outbox = open.createReply();
         outbox.setContent("Cancel session " + sessionKey);
@@ -305,6 +300,7 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     /*
     * @author Jaime
     */
+    // Metodo para comprar los sensores
     public Status MyComissioning(){
         String localService = "STORE " + sessionKey;
         
@@ -343,7 +339,8 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
 
     /*
     * @author Jaime
-    */    
+    */
+    // Metodo para entrar a la sesion
     public Status MyJoinSession(){
         String localService = "SESSION MANAGER " + sessionKey;
         
@@ -464,13 +461,20 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     /*
     * @author Jaime
     * @author Ahmed
-    */  
+    * @author Antonio
+    */
+    // Metodo para resolver el problema
     public Status MySolveProblem() {
 
         int nextX, nextY, nextZ;
         // Recibiendo posicion a la que ir (MOVE X Y Z)
         open = this.LARVAblockingReceive();
 
+        /*
+        * @author Jaime
+        */
+        // Switch para manegar los diferentes tipos de mensajes
+        // que nos puede enviar el Destroyer
         switch (open.getPerformative()) {
             case ACLMessage.REQUEST:
                
@@ -605,7 +609,9 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     
     /*
     * @author Jaime
-    */  
+    */
+    // Metodo para actualizar la posicion del Figther
+    // y no tener q usar el GPS
     private void updatePosition(String action){
         switch(action){
             case "MOVE":
@@ -717,7 +723,9 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
     * @author Jaime
     * @author Antonio
     * @author Ahmed
-    */  
+    */
+    // Metodo simplificado para obtener la siguiente
+    // acción que debe realizar el Fighter
     private String myTakeDecision2(){
         String nextAction = "";
         Point p = new Point(objetivoX,objetivoY);
@@ -759,12 +767,6 @@ public class Practica3TieFighter extends LARVAFirstAgent{  //Practica3TieFighter
                 double miAltura = myGPS[2];
 
                 double distanciaAngulo = (angular - compass + gradoTotal) % gradoTotal;
-        //        Info("\n\n\nDistanciaAngulo: " + distanciaAngulo);
-        //        Info("\n\n\n");
-        //        Info("\n\n\nAngular: " + angular);
-        //        Info("\n\n\n");
-        //        Info("\n\n\nCompass: " + compass);
-        //        Info("\n\n\n");
                 if( distanciaAngulo >= 45) {
 
                     // Elegir distancia de giro minimo
