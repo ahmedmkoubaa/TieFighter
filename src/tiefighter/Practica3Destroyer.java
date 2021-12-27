@@ -350,7 +350,6 @@ public class Practica3Destroyer extends LARVAFirstAgent{
         }
         
         Info("bought all sensor keys " + sensorKeys);
-//        return Status.CLOSEPROBLEM;
         return Status.JOINSESSION;
     }
     
