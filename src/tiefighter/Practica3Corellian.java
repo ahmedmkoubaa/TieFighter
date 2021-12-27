@@ -13,7 +13,7 @@ import swing.LARVADash;
 /*
 * @author Jaime
 */
-
+// Clase principal del Corellian
 public class Practica3Corellian extends LARVAFirstAgent{
 
     
@@ -93,6 +93,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     /*
     * @author Jaime
     */
+    // Variables de entorno
     private String password = "106-WING-14";
     private String type = "Corellian";
     
@@ -134,6 +135,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     /*
     * @author Jaime
     */
+    // Setup del Corellian
     @Override
     public void setup() {
         super.setup();
@@ -154,6 +156,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     /*
     * @author Jaime
     */
+    // Secuencia de estados correspondiente al Corellian
     @Override
     public void Execute() {
         Info("Status: " + mystatus.name());
@@ -197,6 +200,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     /*
     * @author Jaime
     */
+    // Checkin del Corellian
     public Status MyCheckin() {
         Info("Loading passport and checking-in to LARVA");
         if (!loadMyPassport("passport/MyPassport.passport")) {
@@ -215,6 +219,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     * @author Jaime
     * @author Ahmed
     */
+    // Metodo para esperar a que el Destroyer nos mande el CFP
     public Status MyWait() {
         open = this.LARVAblockingReceive();
         sessionKey = open.getConversationId();
@@ -245,6 +250,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     /*
     * @author Jaime
     */
+    // Metodo para cerrar el problema
     public Status MyCloseProblem() {
         outbox = open.createReply();
         outbox.setContent("Cancel session " + sessionKey);
@@ -263,6 +269,7 @@ public class Practica3Corellian extends LARVAFirstAgent{
     /*
     * @author Jaime
     */
+    // Metodo para comprar los sensores
     public Status MyComissioning(){
         String localService = "STORE " + sessionKey;
         
@@ -301,7 +308,8 @@ public class Practica3Corellian extends LARVAFirstAgent{
 
     /*
     * @author Jaime
-    */    
+    */
+    // Metodo para entrar a la sesion
     public Status MyJoinSession(){
         String localService = "SESSION MANAGER " + sessionKey;
         
@@ -345,7 +353,8 @@ public class Practica3Corellian extends LARVAFirstAgent{
     /*
     * @author Jaime
     * @author Ahmed
-    */  
+    */
+    // Metodo para resolver el problema
     public Status MySolveProblem() {
         
         Info("Esperando peticion");
@@ -502,7 +511,9 @@ public class Practica3Corellian extends LARVAFirstAgent{
     
     /*
     * @author Jaime
-    */  
+    */
+    // Metodo para actualizar la posicion del Figther
+    // y no tener q usar el GPS
     private void updatePosition(String action){
         switch(action){
             case "MOVE":
@@ -612,7 +623,9 @@ public class Practica3Corellian extends LARVAFirstAgent{
     * @author Jaime
     * @author Antonio
     * @author Ahmed
-    */  
+    */
+    // Metodo simplificado para obtener la siguiente
+    // acción que debe realizar el Fighter
     private String myTakeDecision2(){
         String nextAction = "";
         Point p = new Point(objetivoX, objetivoY);
